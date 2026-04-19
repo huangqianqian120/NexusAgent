@@ -1,48 +1,91 @@
-# Nexus Agent
+# NexusAgent
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-≥3.10-blue?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
 </p>
 
-**Nexus** 是新一代企业级 AI Agent 开发框架，提供完整的 Agent 基础设施：工具调用、技能系统、记忆管理和多智能体协作。
+**NexusAgent** 是基于 Claude Code 架构的开源 AI Agent 开发框架，在原版基础上增强了记忆管理、技能系统和 Web 可观测性。
+
+> ⚠️ 本项目基于 [Claude Code](https://github.com/anthropics/claude-code) 和 [OpenHarness](https://github.com/HKUDS/OpenHarness) 构建，核心压缩系统代码注释中明确标注了"Translated from Claude Code"。
 
 ## 核心特性
 
-- **Agent Loop** — 流式工具调用循环，指数退避重试，并行执行，Token 计数
-- **工具系统** — 43+ 内置工具（文件、Shell、搜索、Web、MCP）
-- **技能系统** — 按需加载 .md 格式技能文件，兼容 anthropics/skills
-- **记忆系统** — CLAUDE.md 上下文注入，上下文压缩，跨会话持久化
-- **权限管理** — 多级权限模式，路径/命令规则，PreTool/PostTool 钩子
-- **多智能体** — Subagent 派生，团队协作，后台任务生命周期
+### 🧠 记忆系统（新增）
+- **双层记忆模型** — Header（快速召回）+ Content（完整内容，按需加载）
+- **混合召回** — lexical + recency + priority + graph 多维度评分
+- **Token 预算控制** — 可配置召回 budget，默认 2000 tokens
+- **自动 Consolidation** — 优先级衰减、去重、TTL 归档
+- **类型分类** — fact / episode / preference / procedure 四种记忆类型
+
+### ⚡ 技能系统
+- **.md 格式技能文件** — 易于编写和维护
+- **兼容 anthropics/skills** — 生态兼容
+- **运行时动态加载** — 可通过 Web UI 上传/编辑/删除
+- **技能市场** — 技能注册表管理
+
+### 🔧 工具系统
+- **43+ 内置工具** — 文件操作、Shell、搜索、Web、MCP 协议
+- **MCP 协议支持** — Model Context Protocol 扩展
+- **权限钩子** — PreTool/PostTool 钩子，精细控制
+
+### 🌐 Web UI（新增）
+- **实时对话界面** — Socket.IO 双向通信
+- **会话管理** — 跨会话恢复、历史记录
+- **记忆面板** — 可视化查看/搜索记忆
+- **技能面板** — Web UI 管理技能
+- **多 Provider 切换** — 一键切换后端模型
+
+### 🤖 多智能体协作
+- **Subagent 派生** — 动态创建子 Agent
+- **Swarm 团队协作** — CLAUDE_CODE_* 环境变量配置
+- **后台任务** — 长时间运行任务管理
 
 ## 快速开始
 
-### 安装
+### 方式一：命令行（CLI）
 
 ```bash
 # 克隆仓库
-git clone https://github.com/huangqianqian120/NexusAgent.git
+git clone git@github.com:huangqianqian120/NexusAgent.git
 cd NexusAgent
 
 # 安装依赖
 uv sync --extra dev
 
-# 运行
-uv run nexus -p "你好"
-```
-
-### 配置 LLM Provider
-
-```bash
-# 交互式配置（推荐）
-uv run nexus setup
-
-# 或手动设置环境变量
+# 配置环境变量
 export OPENAI_BASE_URL=https://api.minimax.chat/v1
 export ANTHROPIC_API_KEY=your_api_key
 export OPENAI_MODEL=MiniMax-Text-01
+
+# 交互模式
+uv run nexus
+
+# 单次查询
+uv run nexus -p "解释这段代码"
 ```
+
+### 方式二：Web UI
+
+```bash
+# 启动后端 API 服务
+cd NexusAgent
+uv run python -m nexus.web.server &
+
+# 启动前端（另一个终端）
+cd frontend/web
+npm install
+npm run dev
+
+# 访问 http://localhost:5173
+```
+
+Web UI 功能：
+- 实时对话（Socket.IO 双向通信）
+- 记忆面板（侧边栏 Brain 按钮）
+- 技能面板（侧边栏 Skills 按钮）
+- 会话历史（侧边栏 历史会话 按钮）
+- 设置面板（Provider/Model 切换）
 
 ## 支持的 LLM Provider
 
@@ -52,45 +95,71 @@ export OPENAI_MODEL=MiniMax-Text-01
 | **OpenAI** | `https://api.openai.com/v1` | GPT-4o, GPT-4.1 |
 | **Anthropic** | `https://api.anthropic.com` | Claude Sonnet 4, Claude Opus 4 |
 | **Kimi** | `https://api.moonshot.cn/anthropic` | kimi-k2.5 |
-| **Zhipu** | 自定义兼容端点 | glm-4.5 |
-| **DeepSeek** | `https://api.deepseek.com` | deepseek-chat, deepseek-reasoner |
+| **Zhipu** | `https://open.bigmodel.cn/api/paas/v4` | glm-4 |
+| **DeepSeek** | `https://api.deepseek.com` | deepseek-chat |
 | **OpenRouter** | `https://openrouter.ai/api/v1` | 多种开源模型 |
 | **Ollama** | `http://localhost:11434/v1` | 本地模型 |
 
-## 命令行用法
-
-```bash
-# 交互模式
-uv run nexus
-
-# 单次查询
-uv run nexus -p "解释这段代码"
-
-# JSON 输出（程序化使用）
-uv run nexus -p "列出所有函数" --output-format json
-
-# 流式输出
-uv run nexus -p "修复这个 bug" --output-format stream-json
-```
-
 ## 架构
 
-Nexus 实现了完整的 Agent Harness 模式：
+NexusAgent 实现了完整的 Agent Harness 模式：
 
 ```
-Agent Loop → API Client → Tool Registry → Permissions/Hooks → 执行
-     ↑                                                          |
-     └────────────────────── 结果反馈 ──────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                      Web UI / CLI                      │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Agent Loop                           │
+│  ┌─────────┐    ┌──────────┐    ┌───────────────┐   │
+│  │ Memory  │ +  │ Skills   │ +  │ Tool Registry │   │
+│  │ System  │    │ System   │    │ (43+ tools)   │   │
+│  └─────────┘    └──────────┘    └───────────────┘   │
+│                           │                           │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │              API Client (Multi-Provider)         │  │
+│  └─────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
 ```
 
 模型负责"思考"，Harness 负责"执行"——安全、高效、可观测。
 
-## 企业级特性
+## 项目结构
 
-- **多租户支持** — 独立的配置和凭证管理
-- **权限治理** — 细粒度的操作权限控制
-- **审计日志** — 完整的操作记录
-- **插件系统** — 扩展能力，兼容 claude-code plugins
+```
+NexusAgent/
+├── src/nexus/              # 核心 Python 包
+│   ├── memory/             # 记忆系统（新增双层模型）
+│   ├── skills/             # 技能系统
+│   ├── tools/              # 工具注册表
+│   ├── services/           # 会话、压缩等服务
+│   ├── coordinator/        # Agent 协调器
+│   ├── swarm/              # 多 Agent 协作
+│   └── web/                # Web 服务端（新增）
+├── frontend/web/           # React 前端（新增）
+│   └── src/
+│       ├── components/     # UI 组件
+│       ├── hooks/          # WebSocket 等 Hooks
+│       └── lib/            # API 客户端
+└── scripts/                # 安装脚本
+```
+
+## 与 Claude Code 的差异
+
+| 特性 | Claude Code | NexusAgent |
+|------|-------------|------------|
+| 界面 | 仅 CLI | CLI + Web UI |
+| 记忆 | 基础上下文 | 双层混合召回 + Token 预算 |
+| 技能 | 静态加载 | 动态管理 UI |
+| 协作 | 单 Agent | 多 Agent Swarm |
+| 观测性 | 终端输出 | Web 实时面板 |
+
+## 鸣谢
+
+- **Claude Code** — [Anthropic](https://github.com/anthropics/claude-code) — 原始项目
+- **OpenHarness** — [HKUDS](https://github.com/HKUDS/OpenHarness) — 中间层框架
+- **nanobot** — [nanobot-ai](https://github.com/nanobot-ai/nanobot) — Channel 实现来源
 
 ## License
 

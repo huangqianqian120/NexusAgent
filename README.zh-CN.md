@@ -14,7 +14,7 @@
 - multi-agent coordination
 - provider workflows
 - React TUI
-- `ohmo` personal-agent app
+- `Nexus` personal-agent app
 
 ---
 
@@ -25,8 +25,8 @@
 - 新增统一配置入口 `nx setup`
 - provider 配置从“auth -> provider -> model”收敛成 workflow 视角
 - Anthropic/OpenAI 兼容接口支持 profile 级凭据，不再强制共用一把全局 key
-- 新增 `ohmo` personal-agent app
-- `ohmo` 使用 `~/.ohmo` 作为 home workspace，支持 gateway、bootstrap prompts 和交互式 channel 配置
+- 新增 `Nexus` personal-agent app
+- `Nexus` 使用 `~/.Nexus` 作为 home workspace，支持 gateway、bootstrap prompts 和交互式 channel 配置
 
 ---
 
@@ -192,29 +192,29 @@ nx provider use <profile>
 
 ---
 
-## `ohmo` Personal Agent
+## `Nexus` Personal Agent
 
-`ohmo` 是基于 Nexus 的 personal-agent app，不是 core 的一个 mode。
+`Nexus` 是基于 Nexus 的 personal-agent app，不是 core 的一个 mode。
 
 ### 初始化
 
 ```bash
-ohmo init
+Nexus init
 ```
 
 这会创建：
 
-- `~/.ohmo/soul.md`
-- `~/.ohmo/identity.md`
-- `~/.ohmo/user.md`
-- `~/.ohmo/BOOTSTRAP.md`
-- `~/.ohmo/memory/`
-- `~/.ohmo/gateway.json`
+- `~/.Nexus/soul.md`
+- `~/.Nexus/identity.md`
+- `~/.Nexus/user.md`
+- `~/.Nexus/BOOTSTRAP.md`
+- `~/.Nexus/memory/`
+- `~/.Nexus/gateway.json`
 
 其中：
 
 - `soul.md`：长期人格与行为原则
-- `identity.md`：`ohmo` 自己是谁
+- `identity.md`：`Nexus` 自己是谁
 - `user.md`：用户画像、偏好、关系信息
 - `BOOTSTRAP.md`：首轮 landing / onboarding ritual
 - `memory/`：personal memory
@@ -223,10 +223,10 @@ ohmo init
 ### 配置
 
 ```bash
-ohmo config
+Nexus config
 ```
 
-`ohmo config` 会用和 `nx setup` 一致的 workflow 语言来配置 gateway，例如：
+`Nexus config` 会用和 `nx setup` 一致的 workflow 语言来配置 gateway，例如：
 
 - `Anthropic-Compatible API`
 - `Claude Subscription`
@@ -234,7 +234,7 @@ ohmo config
 - `Codex Subscription`
 - `GitHub Copilot`
 
-目前 `ohmo init` / `ohmo config` 已支持引导式配置这些 channel：
+目前 `Nexus init` / `Nexus config` 已支持引导式配置这些 channel：
 
 - Telegram
 - Slack
@@ -247,16 +247,16 @@ ohmo config
 
 ```bash
 # 运行 personal agent
-ohmo
+Nexus
 
 # 前台运行 gateway
-ohmo gateway run
+Nexus gateway run
 
 # 查看 gateway 状态
-ohmo gateway status
+Nexus gateway status
 
 # 重启 gateway
-ohmo gateway restart
+Nexus gateway restart
 ```
 
 ---
@@ -315,15 +315,15 @@ nx -p "Explain this codebase"
 nx
 ```
 
-### `ohmo`
+### `Nexus`
 
 ```bash
-ohmo init
-ohmo config
-ohmo
-ohmo gateway run
-ohmo gateway status
-ohmo gateway restart
+Nexus init
+Nexus config
+Nexus
+Nexus gateway run
+Nexus gateway status
+Nexus gateway restart
 ```
 
 ---
