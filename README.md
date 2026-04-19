@@ -51,7 +51,7 @@ git clone git@github.com:huangqianqian120/NexusAgent.git
 cd NexusAgent
 
 # 安装依赖
-uv sync --extra dev
+uv sync
 
 # 配置环境变量（根据你的 Provider 选择）
 export OPENAI_BASE_URL=<your-provider-base-url>   # 例：https://api.openai.com/v1
@@ -69,7 +69,6 @@ uv run nexus -p "解释这段代码"
 
 ```bash
 # 启动后端 API 服务
-cd NexusAgent
 uv run python -m nexus.web.server &
 
 # 启动前端（另一个终端）
@@ -158,6 +157,7 @@ NexusAgent/
 ## 鸣谢
 
 - **Claude Code** — [Anthropic](https://github.com/anthropics/claude-code) — 原始项目
+- **memBook** — [Larkspur-Wang/memBook](https://github.com/Larkspur-Wang/memBook) — 双层记忆模型灵感来源
 - **OpenHarness** — [HKUDS](https://github.com/HKUDS/OpenHarness) — 中间层框架
 - **nanobot** — [nanobot-ai](https://github.com/nanobot-ai/nanobot) — Channel 实现来源
 

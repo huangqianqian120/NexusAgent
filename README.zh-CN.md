@@ -1,330 +1,160 @@
-# <img src="assets/logo.png" alt="Nexus" width="40" style="vertical-align: middle;"> `oh` — Nexus 中文说明
+# <img src="assets/logo.png" alt="NexusAgent" width="40" style="vertical-align: middle;"> NexusAgent 中文说明
 
 <p align="center">
   <a href="README.md"><strong>English</strong></a> ·
   <a href="README.zh-CN.md"><strong>简体中文</strong></a>
 </p>
 
-**Nexus** 是一个面向开源社区的 Agent Harness。它提供轻量、可扩展、可检查的 Agent 基础设施，包括：
+**NexusAgent** 是一个基于 Claude Code 架构的开源 AI Agent 开发框架，在原版基础上增强了记忆管理、技能系统和 Web 可观测性。
 
-- Agent loop
-- tools / skills / plugins
-- memory / session resume
-- permissions / hooks
-- multi-agent coordination
-- provider workflows
-- React TUI
-- `Nexus` personal-agent app
+核心特性：
 
----
-
-## 最新更新
-
-### 2026-04-06 · v0.1.2
-
-- 新增统一配置入口 `nx setup`
-- provider 配置从“auth -> provider -> model”收敛成 workflow 视角
-- Anthropic/OpenAI 兼容接口支持 profile 级凭据，不再强制共用一把全局 key
-- 新增 `Nexus` personal-agent app
-- `Nexus` 使用 `~/.Nexus` 作为 home workspace，支持 gateway、bootstrap prompts 和交互式 channel 配置
+- 🧠 双层记忆系统（Header + Content 混合召回）
+- ⚡ 技能系统（.md 格式，动态加载）
+- 🌐 Web UI（实时对话、记忆面板、技能管理）
+- 🤖 多 Agent 协作（Subagent + Swarm）
+- 🔧 43+ 内置工具 / MCP 协议支持
 
 ---
 
 ## 快速开始
 
-### 一键安装
+### 方式一：命令行（CLI）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/HKUDS/Nexus/main/scripts/install.sh | bash
+# 克隆仓库
+git clone https://github.com/huangqianqian120/NexusAgent.git
+cd NexusAgent
+
+# 安装依赖
+uv sync
+
+# 配置环境变量
+export ANTHROPIC_API_KEY=<your-api-key>
+
+# 交互模式
+uv run nexus
+
+# 单次查询
+uv run nexus -p "解释这段代码"
 ```
 
-常用安装参数：
-
-- `--from-source`：从源码安装，适合贡献者
-- `--with-channels`：一并安装 IM channel 依赖
-
-例如：
+### 方式二：Web UI
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/HKUDS/Nexus/main/scripts/install.sh | bash -s -- --from-source --with-channels
-```
+# 启动后端 API 服务
+uv run python -m nexus.web.server &
 
-### 本地运行
+# 启动前端（另一个终端）
+cd frontend/web
+npm install
+npm run dev
 
-```bash
-git clone https://github.com/HKUDS/Nexus.git
-cd Nexus
-uv sync --extra dev
-uv run nx
+# 访问 http://localhost:5173
 ```
 
 ---
 
 ## 配置模型与 Provider
 
-现在最推荐的入口是：
+### 支持的 LLM Provider
+
+| Provider | Base URL | 示例模型 |
+|----------|----------|----------|
+| **MiniMax** | `https://api.minimax.chat/v1` | MiniMax-Text-01 |
+| **OpenAI** | `https://api.openai.com/v1` | GPT-4o, GPT-4.1 |
+| **Anthropic** | `https://api.anthropic.com` | Claude Sonnet 4, Claude Opus 4 |
+| **Kimi** | `https://api.moonshot.cn/anthropic` | kimi-k2.5 |
+| **Zhipu** | `https://open.bigmodel.cn/api/paas/v4` | glm-4 |
+| **DeepSeek** | `https://api.deepseek.com` | deepseek-chat |
+| **OpenRouter** | `https://openrouter.ai/api/v1` | 多种开源模型 |
+| **Ollama** | `http://localhost:11434/v1` | 本地模型 |
+
+### 环境变量配置
 
 ```bash
-nx setup
-```
+# 通用配置
+export ANTHROPIC_API_KEY=<your-api-key>
 
-`nx setup` 会按下面的顺序引导：
+# 可选：指定模型
+export OPENAI_MODEL=gpt-4o
 
-1. 选择一个 workflow
-2. 如果需要，完成认证
-3. 选择具体后端 preset
-4. 确认模型
-5. 保存并激活 profile
-
-当前内置 workflow 包括：
-
-- `Anthropic-Compatible API`
-- `Claude Subscription`
-- `OpenAI-Compatible API`
-- `Codex Subscription`
-- `GitHub Copilot`
-
-### Anthropic-Compatible API
-
-适合这类后端：
-
-- Claude 官方 API
-- Moonshot / Kimi
-- Zhipu / GLM
-- MiniMax
-- 其他 Anthropic-compatible endpoint
-
-### OpenAI-Compatible API
-
-适合这类后端：
-
-- OpenAI 官方 API
-- OpenRouter
-- DashScope
-- DeepSeek
-- GitHub Models
-- SiliconFlow
-- Groq
-- Ollama
-- 其他 OpenAI-compatible endpoint
-
-### 常用命令
-
-```bash
-# 统一配置入口
-nx setup
-
-# 查看已有 workflow/profile
-nx provider list
-
-# 切换当前 workflow
-nx provider use codex
-
-# 查看认证状态
-nx auth status
-```
-
-### 高级：添加自定义兼容接口
-
-如果内置 preset 不够，可以直接新增 profile：
-
-```bash
-nx provider add my-endpoint \
-  --label "My Endpoint" \
-  --provider anthropic \
-  --api-format anthropic \
-  --auth-source anthropic_api_key \
-  --model my-model \
-  --base-url https://example.com/anthropic
-```
-
-这一版开始，兼容接口可以按 profile 绑定凭据。  
-也就是说，`Kimi`、`GLM`、`MiniMax` 这类 Anthropic-compatible 后端，不需要再共用一把全局 `anthropic` key。
-
----
-
-## 交互模式与 TUI
-
-运行：
-
-```bash
-nx
-```
-
-你会得到 React/Ink TUI，支持：
-
-- `/` 命令选择器
-- 交互式权限确认
-- `/model` 模型切换
-- `/permissions` 权限模式切换
-- `/resume` 会话恢复
-- `/provider` workflow 选择
-
-非交互模式也支持：
-
-```bash
-nx -p "Explain this repository"
-nx -p "List all functions in main.py" --output-format json
-nx -p "Fix the bug" --output-format stream-json
+# 可选：指定 Base URL（使用第三方兼容接口时）
+export OPENAI_BASE_URL=<your-provider-base-url>
 ```
 
 ---
 
-## Provider 兼容性概览
+## 核心能力
 
-Nexus 现在把 provider 视为 **workflow + profile**，而不是只暴露底层协议名。
+### 🧠 双层记忆系统
 
-| Workflow | 说明 |
-|----------|------|
-| `Anthropic-Compatible API` | Anthropic 风格接口，适合 Claude/Kimi/GLM/MiniMax 等 |
-| `Claude Subscription` | 复用本地 `~/.claude/.credentials.json` |
-| `OpenAI-Compatible API` | OpenAI 风格接口，适合 OpenAI/OpenRouter/各种兼容网关 |
-| `Codex Subscription` | 复用本地 `~/.codex/auth.json` |
-| `GitHub Copilot` | GitHub Copilot OAuth workflow |
+- **Header（快速召回）** + **Content（完整内容，按需加载）**
+- **混合召回** — lexical + recency + priority + graph 多维度评分
+- **Token 预算控制** — 可配置召回 budget，默认 2000 tokens
+- **自动 Consolidation** — 优先级衰减、去重、TTL 归档
+- **类型分类** — fact / episode / preference / procedure 四种记忆类型
 
-日常推荐用法：
+### ⚡ 技能系统
 
-```bash
-nx setup
-nx provider list
-nx provider use <profile>
+- **.md 格式技能文件** — 易于编写和维护
+- **兼容 anthropics/skills** — 生态兼容
+- **运行时动态加载** — 可通过 Web UI 上传/编辑/删除
+- **技能市场** — 技能注册表管理
+
+### 🌐 Web UI
+
+- **实时对话界面** — Socket.IO 双向通信
+- **会话管理** — 跨会话恢复、历史记录
+- **记忆面板** — 可视化查看/搜索记忆
+- **技能面板** — Web UI 管理技能
+- **多 Provider 切换** — 一键切换后端模型
+
+### 🤖 多 Agent 协作
+
+- **Subagent 派生** — 动态创建子 Agent
+- **Swarm 团队协作** — CLAUDE_CODE_* 环境变量配置
+- **后台任务** — 长时间运行任务管理
+
+### 🔧 工具系统
+
+- **43+ 内置工具** — 文件操作、Shell、搜索、Web、MCP 协议
+- **MCP 协议支持** — Model Context Protocol 扩展
+- **权限钩子** — PreTool/PostTool 钩子，精细控制
+
+---
+
+## 项目结构
+
+```
+NexusAgent/
+├── src/nexus/              # 核心 Python 包
+│   ├── memory/             # 记忆系统（双层模型）
+│   ├── skills/             # 技能系统
+│   ├── tools/              # 工具注册表（43+ 工具）
+│   ├── services/           # 会话、压缩等服务
+│   ├── coordinator/        # Agent 协调器
+│   ├── swarm/              # 多 Agent 协作
+│   └── web/                # Web 服务端
+├── frontend/web/           # React 前端
+│   └── src/
+│       ├── components/     # UI 组件
+│       ├── hooks/          # WebSocket 等 Hooks
+│       └── lib/            # API 客户端
+└── scripts/                # 安装脚本
 ```
 
 ---
 
-## `Nexus` Personal Agent
+## 与 Claude Code 的差异
 
-`Nexus` 是基于 Nexus 的 personal-agent app，不是 core 的一个 mode。
-
-### 初始化
-
-```bash
-Nexus init
-```
-
-这会创建：
-
-- `~/.Nexus/soul.md`
-- `~/.Nexus/identity.md`
-- `~/.Nexus/user.md`
-- `~/.Nexus/BOOTSTRAP.md`
-- `~/.Nexus/memory/`
-- `~/.Nexus/gateway.json`
-
-其中：
-
-- `soul.md`：长期人格与行为原则
-- `identity.md`：`Nexus` 自己是谁
-- `user.md`：用户画像、偏好、关系信息
-- `BOOTSTRAP.md`：首轮 landing / onboarding ritual
-- `memory/`：personal memory
-- `gateway.json`：gateway 的 profile 和 channel 配置
-
-### 配置
-
-```bash
-Nexus config
-```
-
-`Nexus config` 会用和 `nx setup` 一致的 workflow 语言来配置 gateway，例如：
-
-- `Anthropic-Compatible API`
-- `Claude Subscription`
-- `OpenAI-Compatible API`
-- `Codex Subscription`
-- `GitHub Copilot`
-
-目前 `Nexus init` / `Nexus config` 已支持引导式配置这些 channel：
-
-- Telegram
-- Slack
-- Discord
-- Feishu
-
-如果 gateway 已经在运行，配置完成后也可以直接选择是否重启。
-
-### 运行
-
-```bash
-# 运行 personal agent
-Nexus
-
-# 前台运行 gateway
-Nexus gateway run
-
-# 查看 gateway 状态
-Nexus gateway status
-
-# 重启 gateway
-Nexus gateway restart
-```
-
----
-
-## Nexus 的核心能力
-
-### Agent Loop
-
-- streaming tool-call cycle
-- tool execution / observation / loop
-- retry + exponential backoff
-- token counting 与成本跟踪
-
-### Tools / Skills / Plugins
-
-- 43+ tools
-- Markdown skills 按需加载
-- 插件生态
-- 兼容 `anthropics/skills`
-- 兼容 Claude-style plugins
-
-### Memory / Session
-
-- `CLAUDE.md` 自动发现与注入
-- `MEMORY.md` 持久记忆
-- session resume
-- auto-compact
-
-### Governance
-
-- 多级 permission mode
-- path rules
-- denied commands
-- hooks
-- interactive approval
-
-### Multi-Agent
-
-- subagent spawning
-- team registry
-- task lifecycle
-- background task execution
-
----
-
-## 常见命令
-
-### `oh`
-
-```bash
-nx setup
-nx provider list
-nx provider use codex
-nx auth status
-nx -p "Explain this codebase"
-nx
-```
-
-### `Nexus`
-
-```bash
-Nexus init
-Nexus config
-Nexus
-Nexus gateway run
-Nexus gateway status
-Nexus gateway restart
-```
+| 特性 | Claude Code | NexusAgent |
+|------|-------------|------------|
+| 界面 | 仅 CLI | CLI + Web UI |
+| 记忆 | 基础上下文 | 双层混合召回 + Token 预算 |
+| 技能 | 静态加载 | 动态管理 UI |
+| 协作 | 单 Agent | 多 Agent Swarm |
+| 观测性 | 终端输出 | Web 实时面板 |
 
 ---
 
@@ -332,41 +162,27 @@ Nexus gateway restart
 
 ```bash
 uv run pytest -q
-python scripts/test_harness_features.py
-python scripts/test_real_skills_plugins.py
 ```
 
 ---
 
-## 贡献
+## 致谢
 
-欢迎贡献：
+NexusAgent 的诞生离不开以下开源项目的启发：
 
-- tools
-- skills
-- plugins
-- providers
-- multi-agent coordination
-- tests
-- 文档与中文翻译
-
-开发环境：
-
-```bash
-git clone https://github.com/HKUDS/Nexus.git
-cd Nexus
-uv sync --extra dev
-uv run pytest -q
-```
-
-更多信息：
-
-- [贡献指南](CONTRIBUTING.md)
-- [更新日志](CHANGELOG.md)
-- [Showcase](docs/SHOWCASE.md)
+- **Claude Code** — [Anthropic/claude-code](https://github.com/anthropics/claude-code) — 核心架构来源
+- **memBook** — [Larkspur-Wang/memBook](https://github.com/Larkspur-Wang/memBook) — 双层记忆模型灵感来源
+- **OpenHarness** — [HKUDS/OpenHarness](https://github.com/HKUDS/OpenHarness) — 中间层框架
+- **nanobot** — [nanobot-ai/nanobot](https://github.com/nanobot-ai/nanobot) — Channel 实现参考
 
 ---
 
 ## License
 
 MIT，见 [LICENSE](LICENSE)。
+
+---
+
+**开源地址**: https://github.com/huangqianqian120/NexusAgent
+
+欢迎 Star 和贡献！
