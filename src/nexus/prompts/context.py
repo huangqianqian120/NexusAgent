@@ -7,7 +7,7 @@ from typing import Iterable
 
 from nexus.config.paths import get_project_issue_file, get_project_pr_comments_file
 from nexus.config.settings import Settings
-from nexus.memory import find_relevant_memories, load_memory_prompt
+from nexus.memory import MemoryStore, MemoryQuery
 from nexus.prompts.claudemd import load_claude_md_prompt
 from nexus.prompts.system_prompt import build_system_prompt
 from nexus.skills.loader import load_skill_registry
@@ -89,6 +89,7 @@ def build_runtime_system_prompt(
                 sections.append(f"# {title}\n\n```md\n{content[:12000]}\n```")
 
     if settings.memory.enabled:
+        store = MemoryStore(cwd)
         memory_section = load_memory_prompt(
             cwd,
             max_entrypoint_lines=settings.memory.max_entrypoint_lines,
@@ -97,21 +98,26 @@ def build_runtime_system_prompt(
             sections.append(memory_section)
 
         if latest_user_prompt:
-            relevant = find_relevant_memories(
-                latest_user_prompt,
-                cwd,
-                max_results=settings.memory.max_files,
+            query = MemoryQuery(
+                text=latest_user_prompt,
+                limit=settings.memory.max_files,
+                budget_tokens=2000,
             )
-            if relevant:
+            result = store.recall(query)
+            if result.entries:
                 lines = ["# Relevant Memories"]
-                for header in relevant:
-                    content = header.path.read_text(encoding="utf-8", errors="replace").strip()
+                for entry in result.entries:
+                    content_obj = result.contents.get(entry.id)
+                    body = content_obj.body if content_obj else entry.summary
                     lines.extend(
                         [
                             "",
-                            f"## {header.path.name}",
+                            f"## {entry.name} [{entry.memory_type.value}]",
+                            f"- Tags: {', '.join(entry.tags) if entry.tags else 'none'}",
+                            f"- Priority: {entry.priority} | Confidence: {entry.confidence}",
+                            "",
                             "```md",
-                            content[:8000],
+                            body[:8000],
                             "```",
                         ]
                     )
