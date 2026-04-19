@@ -1,6 +1,6 @@
-# Contributing to Nexus
+# Contributing to NexusAgent
 
-Nexus is an open-source agent harness focused on clarity, hackability, and compatibility with Claude-style workflows.
+NexusAgent is an open-source AI Agent harness focused on clarity, hackability, and compatibility with Claude-style workflows.
 
 ## Ways to contribute
 
@@ -13,16 +13,16 @@ Nexus is an open-source agent harness focused on clarity, hackability, and compa
 ## Development setup
 
 ```bash
-git clone https://github.com/HKUDS/Nexus.git
-cd Nexus
+git clone https://github.com/huangqianqian120/NexusAgent.git
+cd NexusAgent
 uv sync --extra dev
 ```
 
-If you want to work on the React terminal UI as well:
+If you want to work on the Web UI as well:
 
 ```bash
-cd frontend/terminal
-npm ci
+cd frontend/web
+npm install
 cd ../..
 ```
 
@@ -38,7 +38,7 @@ uv run pytest -q
 Frontend sanity check:
 
 ```bash
-cd frontend/terminal
+cd frontend/web
 npx tsc --noEmit
 ```
 
@@ -53,7 +53,7 @@ npx tsc --noEmit
 
 ## Documentation and community contributions
 
-Issue [#7](https://github.com/HKUDS/Nexus/issues/7) surfaced several high-value docs needs. Useful contributions in that area include:
+Issue [#1](https://github.com/huangqianqian120/NexusAgent/issues/1) surfaced several high-value docs needs. Useful contributions in that area include:
 
 - README accuracy improvements and compatibility notes.
 - Short, reproducible examples for common workflows.
