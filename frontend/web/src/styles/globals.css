@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 97.1%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 168 100% 50%; /* 赛博青绿 */
+    --primary-foreground: 240 10% 3.9%;
+    --secondary: 240 10% 96.1%;
+    --secondary-foreground: 240 10% 3.9%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 45%;
+    --accent: 240 10% 96.1%;
+    --accent-foreground: 168 100% 50%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 90%;
+    --input: 240 5% 90%;
+    --ring: 168 100% 50%;
+    --radius: 0.5rem;
+
+    /* 赛博绿调色板 */
+    --cyber-green: 168 100% 50%;
+    --cyber-cyan: 187 100% 50%;
+    --cyber-dark: 240 10% 2%;
+    --cyber-glow: 168 100% 50%;
+
+    /* 状态色 */
+    --success: 142 76% 45%;
+    --warning: 38 92% 50%;
+    --error: 0 84% 60%;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 168 100% 50%;
+    --primary-foreground: 240 10% 3.9%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 168 100% 50%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 168 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* 赛博朋克滚动条 */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--cyber-green) / 0.3);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--cyber-green) / 0.5);
+    box-shadow: 0 0 10px hsl(var(--cyber-green) / 0.5);
+  }
+}
+
+/* 赛博风格发光效果 */
+.cyber-glow {
+  box-shadow: 0 0 20px hsl(var(--cyber-green) / 0.3),
+              0 0 40px hsl(var(--cyber-green) / 0.1);
+}
+
+.cyber-glow-text {
+  text-shadow: 0 0 10px hsl(var(--cyber-green) / 0.8),
+               0 0 20px hsl(var(--cyber-green) / 0.5),
+               0 0 30px hsl(var(--cyber-green) / 0.3);
+}
+
+.cyber-border {
+  border: 1px solid hsl(var(--cyber-green) / 0.3);
+  box-shadow: inset 0 0 20px hsl(var(--cyber-green) / 0.05),
+              0 0 20px hsl(var(--cyber-green) / 0.1);
+}
+
+/* 动画 */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--cyber-green) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px hsl(var(--cyber-green) / 0.5),
+                0 0 50px hsl(var(--cyber-green) / 0.2);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-scan-line {
+  animation: scan-line 8s linear infinite;
+}
+
+/* 玻璃态效果 */
+.glass {
+  background: hsl(var(--cyber-dark) / 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* 渐变背景 */
+.gradient-cyber {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--cyber-dark)) 0%,
+    hsl(240 10% 6%) 50%,
+    hsl(200 20% 4%) 100%
+  );
+}
+
+/* 网格背景 */
+.grid-cyber {
+  background-image:
+    linear-gradient(hsl(var(--cyber-green) / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--cyber-green) / 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* 输入框聚焦效果 */
+input:focus, textarea:focus {
+  outline: none;
+  border-color: hsl(var(--cyber-green));
+  box-shadow: 0 0 0 2px hsl(var(--cyber-green) / 0.2),
+              0 0 20px hsl(var(--cyber-green) / 0.1);
+}
+
+/* 按钮悬停效果 */
+.btn-cyber {
+  @apply relative overflow-hidden transition-all duration-300;
+}
+
+.btn-cyber::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full;
+  transition: transform 0.5s;
+}
+
+.btn-cyber:hover::before {
+  transform: translateX(100%);
+}
+
+.btn-cyber:hover {
+  box-shadow: 0 0 20px hsl(var(--cyber-green) / 0.4);
+  border-color: hsl(var(--cyber-green));
+}
