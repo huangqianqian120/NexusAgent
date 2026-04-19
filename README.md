@@ -86,19 +86,6 @@ Web UI 功能：
 - 会话历史（侧边栏 历史会话 按钮）
 - 设置面板（Provider/Model 切换）
 
-## 支持的 LLM Provider
-
-| Provider | Base URL | 示例模型 |
-|----------|----------|----------|
-| **MiniMax** | `https://api.minimax.chat/v1` | MiniMax-Text-01 |
-| **OpenAI** | `https://api.openai.com/v1` | GPT-4o, GPT-4.1 |
-| **Anthropic** | `https://api.anthropic.com` | Claude Sonnet 4, Claude Opus 4 |
-| **Kimi** | `https://api.moonshot.cn/anthropic` | kimi-k2.5 |
-| **Zhipu** | `https://open.bigmodel.cn/api/paas/v4` | glm-4 |
-| **DeepSeek** | `https://api.deepseek.com` | deepseek-chat |
-| **OpenRouter** | `https://openrouter.ai/api/v1` | 多种开源模型 |
-| **Ollama** | `http://localhost:11434/v1` | 本地模型 |
-
 ## 架构
 
 NexusAgent 实现了完整的 Agent Harness 模式：
