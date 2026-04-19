@@ -53,10 +53,10 @@ cd NexusAgent
 # 安装依赖
 uv sync --extra dev
 
-# 配置环境变量
-export OPENAI_BASE_URL=https://api.minimax.chat/v1
-export ANTHROPIC_API_KEY=your_api_key
-export OPENAI_MODEL=MiniMax-Text-01
+# 配置环境变量（根据你的 Provider 选择）
+export OPENAI_BASE_URL=<your-provider-base-url>   # 例：https://api.openai.com/v1
+export ANTHROPIC_API_KEY=<your-api-key>
+export OPENAI_MODEL=<your-model>                  # 例：gpt-4o、claude-sonnet-4-20250514
 
 # 交互模式
 uv run nexus
