@@ -13,6 +13,7 @@ authors = [
     { name = "novix-science" },
 ]
 
+# Core dependencies (required for basic operation)
 dependencies = [
     "anthropic>=0.40.0",
     "openai>=1.0.0",
@@ -29,13 +30,18 @@ dependencies = [
     "questionary>=2.0.1",
     "watchfiles>=0.20.0",
     "croniter>=2.0.0",
+    "eventlet>=0.41.0",
+]
+
+[project.optional-dependencies]
+# IM channel integrations (optional - install only if needed)
+channels = [
     "slack-sdk>=3.0.0",
     "python-telegram-bot>=21.0.0",
     "discord.py>=2.0.0",
     "lark-oapi>=1.5.0",
 ]
-
-[project.optional-dependencies]
+# Development dependencies
 dev = [
     "pexpect>=4.9.0",
     "pytest>=8.0.0",
@@ -44,14 +50,25 @@ dev = [
     "ruff>=0.5.0",
     "mypy>=1.10.0",
 ]
+# Web UI dependencies
+web = [
+    "flask>=3.0.0",
+    "flask-socketio>=5.3.0",
+    "python-socketio>=5.10.0",
+    "flask-cors>=4.0.0",
+    "eventlet>=0.35.0",
+]
+# All optional dependencies
+all = [
+    "nexus-ai[channels,dev,web]",
+]
 
 [project.scripts]
 nexus = "nexus.cli:app"
 nx = "nexus.cli:app"
-ohmo = "ohmo.cli:app"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/nexus", "ohmo"]
+packages = ["src/nexus", "personal_agent"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "frontend/terminal/package.json" = "nexus/_frontend/package.json"
