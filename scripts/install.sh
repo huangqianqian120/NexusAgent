@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# OpenHarness one-click installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/HKUDS/OpenHarness/main/scripts/install.sh | bash
+# NexusAgent one-click installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/huangqianqian120/NexusAgent/main/scripts/install.sh | bash
 #        bash scripts/install.sh [--from-source] [--with-channels]
 
 set -euo pipefail
@@ -40,8 +40,7 @@ for arg in "$@"; do
             echo "Usage: $0 [--from-source] [--with-channels]"
             echo ""
             echo "  --from-source    Clone from GitHub and install in editable mode"
-            echo "  --with-channels  Deprecated compatibility flag."
-            echo "                   Common IM channel dependencies are installed by default."
+            echo "  --with-channels  Install with IM channel dependencies (Slack, Discord, etc.)"
             exit 0
             ;;
         *)
@@ -57,8 +56,8 @@ done
 echo ""
 echo -e "${BOLD}${CYAN}  ██████╗ ██╗  ██╗${RESET}"
 echo -e "${BOLD}${CYAN} ██╔═══██╗██║  ██║${RESET}"
-echo -e "${BOLD}${CYAN} ██║   ██║███████║${RESET}   OpenHarness Installer"
-echo -e "${BOLD}${CYAN} ██║   ██║██╔══██║${RESET}   Open Agent Harness"
+echo -e "${BOLD}${CYAN} ██║   ██║███████║${RESET}   NexusAgent Installer"
+echo -e "${BOLD}${CYAN} ██║   ██║██╔══██║${RESET}   AI Agent Harness"
 echo -e "${BOLD}${CYAN} ╚██████╔╝██║  ██║${RESET}"
 echo -e "${BOLD}${CYAN}  ╚═════╝ ╚═╝  ╚═╝${RESET}"
 echo ""
@@ -148,9 +147,9 @@ if [ -z "$PIP_CMD" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Step 3: Check Node.js >= 18
+# Step 3: Check Node.js >= 18 (optional, for Web UI)
 # ---------------------------------------------------------------------------
-step "Checking Node.js version (>= 18 required for React TUI)"
+step "Checking Node.js version (>= 18 required for Web UI)"
 
 NODE_OK=false
 if command -v node &>/dev/null; then
@@ -159,11 +158,11 @@ if command -v node &>/dev/null; then
         NODE_OK=true
         success "Found Node.js $(node --version)"
     else
-        warn "Node.js $(node --version) is too old (need >= 18). React TUI will be skipped."
+        warn "Node.js $(node --version) is too old (need >= 18). Web UI will be skipped."
     fi
 else
-    warn "Node.js not found. React TUI will be skipped."
-    echo "  To enable the React terminal UI, install Node.js 18+:"
+    warn "Node.js not found. Web UI will be skipped."
+    echo "  To enable the Web UI, install Node.js 18+:"
     case "$OS_TYPE" in
         macOS)
             echo "    brew install node"
@@ -179,13 +178,13 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Step 4: Install OpenHarness
+# Step 4: Install NexusAgent
 # ---------------------------------------------------------------------------
-step "Installing OpenHarness"
+step "Installing NexusAgent"
 
-REPO_URL="https://github.com/HKUDS/OpenHarness.git"
-INSTALL_DIR="$HOME/.openharness-src"
-VENV_DIR="$HOME/.openharness-venv"
+REPO_URL="https://github.com/huangqianqian120/NexusAgent.git"
+INSTALL_DIR="$HOME/.nexusagent-src"
+VENV_DIR="$HOME/.nexusagent-venv"
 
 # ---------------------------------------------------------------------------
 # Create a virtual environment to avoid PEP 668 externally-managed errors
@@ -214,7 +213,7 @@ if [ "$FROM_SOURCE" = true ]; then
             info "Source directory exists, pulling latest changes..."
             git -C "$INSTALL_DIR" pull --ff-only
         else
-            info "Cloning OpenHarness into ${INSTALL_DIR}..."
+            info "Cloning NexusAgent into ${INSTALL_DIR}..."
             git clone "$REPO_URL" "$INSTALL_DIR"
         fi
     else
@@ -227,88 +226,87 @@ if [ "$FROM_SOURCE" = true ]; then
         exit 1
     fi
 
-    info "Installing in editable mode (pip install -e .)..."
-    $PIP_CMD install -e "$INSTALL_DIR" --quiet
+    if [ "$WITH_CHANNELS" = true ]; then
+        info "Installing with channel dependencies..."
+        $PIP_CMD install -e "$INSTALL_DIR[channels]" --quiet
+    else
+        info "Installing in editable mode (pip install -e .)..."
+        $PIP_CMD install -e "$INSTALL_DIR" --quiet
+    fi
 else
-    info "Mode: pip install openharness-ai"
-    $PIP_CMD install openharness-ai --quiet --upgrade
+    info "Mode: pip install nexus-ai"
+    if [ "$WITH_CHANNELS" = true ]; then
+        $PIP_CMD install "nexus-ai[channels]" --quiet --upgrade
+    else
+        $PIP_CMD install nexus-ai --quiet --upgrade
+    fi
 fi
 
-success "OpenHarness package installed"
+success "NexusAgent package installed"
 
 # ---------------------------------------------------------------------------
-# Step 5: Channel dependencies
-# ---------------------------------------------------------------------------
-if [ "$WITH_CHANNELS" = true ]; then
-    step "Channel dependencies"
-    info "--with-channels is no longer required; common IM channel dependencies are installed by default."
-fi
-
-# ---------------------------------------------------------------------------
-# Step 6: Install frontend/terminal npm dependencies
+# Step 5: Install frontend/web npm dependencies (optional)
 # ---------------------------------------------------------------------------
 if [ "$NODE_OK" = true ]; then
-    # Determine the frontend/terminal path
+    # Determine the frontend/web path
     if [ "$FROM_SOURCE" = true ]; then
-        FRONTEND_DIR="$INSTALL_DIR/frontend/terminal"
+        FRONTEND_DIR="$INSTALL_DIR/frontend/web"
     else
-        FRONTEND_DIR="$(pwd)/frontend/terminal"
+        FRONTEND_DIR="$(pwd)/frontend/web"
     fi
 
     if [ -d "$FRONTEND_DIR" ] && [ -f "$FRONTEND_DIR/package.json" ]; then
-        step "Installing React TUI dependencies"
+        step "Installing Web UI dependencies"
         info "Running npm install in ${FRONTEND_DIR}..."
         (cd "$FRONTEND_DIR" && npm install --no-fund --no-audit --silent)
-        success "React TUI dependencies installed"
+        success "Web UI dependencies installed"
     else
-        info "No frontend/terminal directory found — skipping npm install"
+        info "No frontend/web directory found — skipping npm install"
     fi
 fi
 
 # ---------------------------------------------------------------------------
-# Step 7: Create OpenHarness config directory
+# Step 6: Create NexusAgent config directory
 # ---------------------------------------------------------------------------
-step "Setting up OpenHarness config directory"
+step "Setting up NexusAgent config directory"
 
-mkdir -p "$HOME/.openharness"
-mkdir -p "$HOME/.openharness/skills"
-mkdir -p "$HOME/.openharness/plugins"
+mkdir -p "$HOME/.nexus"
+mkdir -p "$HOME/.nexus/skills"
+mkdir -p "$HOME/.nexus/plugins"
 
-success "Config directory ready: ~/.openharness/"
+success "Config directory ready: ~/.nexus/"
 
 # ---------------------------------------------------------------------------
-# Step 8: Verify installation
+# Step 7: Verify installation
 # ---------------------------------------------------------------------------
 step "Verifying installation"
 
-if command -v oh &>/dev/null && command -v ohmo &>/dev/null; then
-    OH_VERSION=$(oh --version 2>&1 || echo "(version check failed)")
-    OHMO_VERSION=$(ohmo --help >/dev/null 2>&1 && echo "available" || echo "not available")
+if command -v nexus &>/dev/null; then
+    NEXUS_VERSION=$(nexus --version 2>&1 || echo "(version check failed)")
     success "Installation successful!"
     echo ""
-    echo -e "  ${BOLD}oh${RESET} is ready: ${GREEN}${OH_VERSION}${RESET}"
-    echo -e "  ${BOLD}ohmo${RESET} is ready: ${GREEN}${OHMO_VERSION}${RESET}"
-elif "$PYTHON_CMD" -m openharness --version &>/dev/null 2>&1; then
-    OH_VERSION=$("$PYTHON_CMD" -m openharness --version 2>&1)
-    warn "'oh'/'ohmo' not in PATH. Run via: python -m openharness or python -m ohmo"
-    echo "  Version: ${OH_VERSION}"
+    echo -e "  ${BOLD}nexus${RESET} is ready: ${GREEN}${NEXUS_VERSION}${RESET}"
+elif "$PYTHON_CMD" -m nexus --version &>/dev/null 2>&1; then
+    NEXUS_VERSION=$("$PYTHON_CMD" -m nexus --version 2>&1)
+    warn "'nexus' not in PATH. Run via: python -m nexus"
+    echo "  Version: ${NEXUS_VERSION}"
     echo "  To add them to PATH, ensure ${VENV_DIR}/bin is in PATH:"
     echo "    export PATH=\"${VENV_DIR}/bin:\$PATH\""
 else
-    warn "Could not verify 'oh'/'ohmo' commands. The package may need a PATH update."
-    echo "  Try: $PYTHON_CMD -m openharness --version"
+    warn "Could not verify 'nexus' command. The package may need a PATH update."
+    echo "  Try: $PYTHON_CMD -m nexus --version"
     echo "  Or add ${VENV_DIR}/bin to PATH and restart your shell."
 fi
 
 # ---------------------------------------------------------------------------
-# Step 9: Add venv activation to shell profile
+# Step 8: Add venv activation to shell profile
 # ---------------------------------------------------------------------------
 step "Setting up shell integration"
 
 ACTIVATION_LINE="export PATH=\"$VENV_DIR/bin:\$PATH\""
 FISH_CONFIG="$HOME/.config/fish/config.fish"
 FISH_BLOCK=$(cat <<EOF
-# OpenHarness
+# NexusAgent
 if not contains -- "$VENV_DIR/bin" \$PATH
     set -gx PATH "$VENV_DIR/bin" \$PATH
 end
@@ -328,7 +326,7 @@ append_shell_path() {
         return
     fi
     echo "" >> "$rc_file"
-    echo "# OpenHarness" >> "$rc_file"
+    echo "# NexusAgent" >> "$rc_file"
     echo "$ACTIVATION_LINE" >> "$rc_file"
     success "Added $VENV_DIR/bin to PATH in $(basename "$rc_file")"
     configured_any=true
@@ -358,14 +356,13 @@ fi
 # Done
 # ---------------------------------------------------------------------------
 echo ""
-echo -e "${BOLD}${GREEN}OpenHarness is installed!${RESET}"
+echo -e "${BOLD}${GREEN}NexusAgent is installed!${RESET}"
 echo ""
 echo "  Next steps:"
 echo "    1. Restart shell, or reload your shell config:"
 echo "         bash/zsh: source ~/.bashrc  (or ~/.zshrc)"
 echo "         fish:     source ~/.config/fish/config.fish"
 echo "    2. Set your API key:        export ANTHROPIC_API_KEY=your_key"
-echo "    3. Launch:                  oh"
-echo "    4. Launch ohmo:             ohmo"
-echo "    5. Docs:                    https://github.com/HKUDS/OpenHarness"
+echo "    3. Launch CLI:              nexus"
+echo "    4. Docs:                    https://github.com/huangqianqian120/NexusAgent"
 echo ""
