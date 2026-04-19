@@ -7,7 +7,7 @@
 
 **NexusAgent** 是基于 Claude Code 架构的开源 AI Agent 开发框架，在原版基础上增强了记忆管理、技能系统和 Web 可观测性。
 
-> ⚠️ 本项目基于 [Claude Code](https://github.com/anthropics/claude-code) 和 [OpenHarness](https://github.com/HKUDS/OpenHarness) 构建，核心压缩系统代码注释中明确标注了"Translated from Claude Code"。
+> ⚠️ 本项目基于 [Claude Code](https://github.com/anthropics/claude-code) 和 [OpenHarness](https://github.com/HKUDS/OpenHarness) 构建。
 
 ## 核心特性
 
