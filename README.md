@@ -19,7 +19,6 @@
 - **类型分类** — fact / episode / preference / procedure 四种记忆类型
 
 ### ⚡ 技能系统
-- **.md 格式技能文件** — 易于编写和维护
 - **兼容 anthropics/skills** — 生态兼容
 - **运行时动态加载** — 可通过 Web UI 上传/编辑/删除
 - **技能市场** — 技能注册表管理
