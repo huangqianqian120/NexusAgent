@@ -129,15 +129,6 @@ NexusAgent/
 └── scripts/                # 安装脚本
 ```
 
-## 与 Claude Code 的差异
-
-| 特性 | Claude Code | NexusAgent |
-|------|-------------|------------|
-| 界面 | 仅 CLI | CLI + Web UI |
-| 记忆 | 基础上下文 | 双层混合召回 + Token 预算 |
-| 技能 | 静态加载 | 动态管理 UI |
-| 协作 | 单 Agent | 多 Agent Swarm |
-| 观测性 | 终端输出 | Web 实时面板 |
 
 ## 鸣谢
 
