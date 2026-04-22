@@ -66,15 +66,29 @@ uv run nexus -p "解释这段代码"
 
 ### 方式二：Web UI
 
+**推荐使用一键启动脚本：**
+
+```bash
+# 一键启动（自动检测依赖和端口）
+./start.sh
+
+# 一键停止
+./stop.sh
+
+# 访问 http://localhost:5173（端口被占用时自动切换）
+```
+
+**或手动启动：**
+
 ```bash
 # 启动后端 API 服务（必须设置 CORS_ORIGINS）
-CORS_ORIGINS="http://localhost:5174,http://localhost:5173,http://localhost:3000" uv run python -m nexus.web.server &
+CORS_ORIGINS="http://localhost:5173,http://localhost:5174,http://localhost:3000" uv run python -m nexus.web.server &
 
 # 启动前端（另一个终端）
 cd frontend/web
 npm run dev
 
-# 访问 http://localhost:5174（如果端口被占用，Vite 会自动切换到 5175/5176...）
+# 访问 http://localhost:5173（端口被占用时自动切换到 5174/5175...）
 ```
 
 Web UI 功能：
