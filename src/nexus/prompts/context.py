@@ -8,6 +8,7 @@ from typing import Iterable
 from nexus.config.paths import get_project_issue_file, get_project_pr_comments_file
 from nexus.config.settings import Settings
 from nexus.memory import MemoryStore, MemoryQuery
+from nexus.memory.memdir import load_memory_prompt
 from nexus.prompts.claudemd import load_claude_md_prompt
 from nexus.prompts.system_prompt import build_system_prompt
 from nexus.skills.loader import load_skill_registry
