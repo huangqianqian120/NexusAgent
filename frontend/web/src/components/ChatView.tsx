@@ -64,7 +64,7 @@ export function ChatView({ transcript, commands = [], thinking = false }: ChatVi
   }
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div ref={scrollRef} className="h-full overflow-y-auto p-4 space-y-4">
       {transcript.map((item, index) => (
         <MessageBubble key={index} item={item} />
       ))}
