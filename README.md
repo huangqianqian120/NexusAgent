@@ -67,15 +67,14 @@ uv run nexus -p "解释这段代码"
 ### 方式二：Web UI
 
 ```bash
-# 启动后端 API 服务
-uv run python -m nexus.web.server &
+# 启动后端 API 服务（必须设置 CORS_ORIGINS）
+CORS_ORIGINS="http://localhost:5174,http://localhost:5173,http://localhost:3000" uv run python -m nexus.web.server &
 
 # 启动前端（另一个终端）
 cd frontend/web
-npm install
 npm run dev
 
-# 访问 http://localhost:5173
+# 访问 http://localhost:5174（如果端口被占用，Vite 会自动切换到 5175/5176...）
 ```
 
 Web UI 功能：
