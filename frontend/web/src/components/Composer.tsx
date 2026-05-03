@@ -3,6 +3,9 @@ import { Send, Square, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { CommandPalette } from './CommandPalette';
 
+const MAX_TEXTAREA_HEIGHT = 200;
+const SUBMIT_COOLDOWN_MS = 100;
+
 interface ComposerProps {
   onSend: (message: string) => void;
   onCancel?: () => void;
@@ -20,27 +23,24 @@ export function Composer({ onSend, onCancel, disabled, busy, commands = [] }: Co
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`;
     }
   }, [message]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    // This is only called by button click now
-    e.preventDefault();
-    console.log('[Composer] handleSubmit called via button, message:', message, 'disabled:', disabled, 'busy:', busy, 'isSubmitting:', isSubmitting);
-    if (!message.trim() || disabled || busy || isSubmitting) {
-      console.log('[Composer] Submit blocked:', !message.trim() ? 'empty' : disabled ? 'disabled' : busy ? 'busy' : 'submitting');
-      return;
-    }
-    console.log('[Composer] Sending message:', message.trim());
+  const doSend = () => {
+    if (!message.trim() || disabled || busy || isSubmitting) return;
     setIsSubmitting(true);
     onSend(message.trim());
     setMessage('');
-    setTimeout(() => setIsSubmitting(false), 100);
+    setTimeout(() => setIsSubmitting(false), SUBMIT_COOLDOWN_MS);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    doSend();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Show command palette when user types /
     if (e.key === '/' && !showCommands && message === '') {
       setShowCommands(true);
       return;
@@ -56,15 +56,7 @@ export function Composer({ onSend, onCancel, disabled, busy, commands = [] }: Co
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      // Use setTimeout to avoid React state update batch issues
-      setTimeout(() => {
-        if (message.trim() && !disabled && !busy && !isSubmitting) {
-          setIsSubmitting(true);
-          onSend(message.trim());
-          setMessage('');
-          setTimeout(() => setIsSubmitting(false), 100);
-        }
-      }, 0);
+      setTimeout(() => doSend(), 0);
     }
     if (e.key === 'Escape' && busy && onCancel) {
       e.preventDefault();
@@ -80,7 +72,6 @@ export function Composer({ onSend, onCancel, disabled, busy, commands = [] }: Co
 
   return (
     <form onSubmit={handleSubmit} className="relative">
-      {/* Input Container */}
       <div className="relative rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] transition-all hover:border-[hsl(168,100%,50%)]/30 focus-within:border-[hsl(168,100%,50%)]/50 focus-within:shadow-[0_0_20px_hsl(168,100%,50%)]/0.1]">
         <textarea
           ref={textareaRef}
@@ -99,7 +90,6 @@ export function Composer({ onSend, onCancel, disabled, busy, commands = [] }: Co
           rows={1}
         />
 
-        {/* Action Buttons */}
         <div className="absolute right-2 bottom-2 flex items-center gap-2">
           {busy ? (
             <button
@@ -134,7 +124,6 @@ export function Composer({ onSend, onCancel, disabled, busy, commands = [] }: Co
         </div>
       </div>
 
-      {/* Command Palette */}
       {showCommands && (
         <CommandPalette
           commands={commands.map((cmd) => ({
@@ -146,7 +135,6 @@ export function Composer({ onSend, onCancel, disabled, busy, commands = [] }: Co
         />
       )}
 
-      {/* Hint */}
       <div className="flex items-center justify-between mt-2 px-1">
         <p className="text-[10px] text-[hsl(240,5%,64.9%)]">
           <kbd className="px-1.5 py-0.5 rounded bg-[hsl(240,3.7%,15.9%)] text-[hsl(0,0%,98%)]">/</kbd> 命令

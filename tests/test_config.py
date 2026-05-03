@@ -1,7 +1,6 @@
 """Tests for configuration system."""
 
-import pytest
-from nexus.platforms import detect_platform, get_platform_capabilities, PlatformName
+from nexus.platforms import detect_platform, get_platform_capabilities
 
 
 class TestPlatforms:

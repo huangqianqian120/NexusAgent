@@ -6,7 +6,7 @@ import asyncio
 import contextlib
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from uuid import uuid4
 
 from nexus.api.client import SupportsStreamingMessages
@@ -21,7 +21,6 @@ from nexus.engine.stream_events import (
     ToolExecutionCompleted,
     ToolExecutionStarted,
 )
-from nexus.output_styles import load_output_styles
 from nexus.tasks import get_task_manager
 from nexus.themes import list_themes
 from nexus.ui.protocol import BackendEvent, FrontendRequest, TranscriptItem

@@ -40,8 +40,6 @@ def consolidate_entries(
         if entry.status != RecordStatus.ACTIVE:
             continue
 
-        changed = False
-
         # Archive TTL-expired entries
         if policy.archive_expired and entry.ttl_days is not None:
             base_time = entry.event_time or entry.created_at
@@ -51,7 +49,6 @@ def consolidate_entries(
                 entry.metadata["archived_reason"] = "ttl_expired"
                 entry.metadata["archived_at"] = now.isoformat()
                 touched[entry.id] = entry
-                changed = True
 
         # Apply priority decay for active entries
         if entry.status == RecordStatus.ACTIVE and policy.decay_per_day > 0:
@@ -64,7 +61,6 @@ def consolidate_entries(
                     entry.metadata["decayed_at"] = now.isoformat()
                     entry.metadata["decay_age_days"] = age_days
                     touched[entry.id] = entry
-                    changed = True
 
     # 2. Deduplicate similar entries
     if policy.dedupe_enabled:

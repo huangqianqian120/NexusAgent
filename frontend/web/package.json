@@ -10,13 +10,6 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@radix-ui/react-dialog": "^1.1.0",
-    "@radix-ui/react-dropdown-menu": "^2.1.0",
-    "@radix-ui/react-select": "^2.1.0",
-    "@radix-ui/react-slot": "^1.1.0",
-    "@radix-ui/react-tabs": "^1.1.0",
-    "@types/jszip": "^3.4.0",
-    "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.400.0",
@@ -26,6 +19,7 @@
     "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
+    "@types/jszip": "^3.4.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.0",

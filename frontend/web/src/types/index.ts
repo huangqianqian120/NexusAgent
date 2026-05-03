@@ -1,5 +1,8 @@
 // Protocol types matching backend FrontendRequest and BackendEvent
 
+export type Status = AppState;
+export type Theme = 'light' | 'dark' | 'system';
+
 export type FrontendRequest =
   | { type: 'submit_line'; line: string }
   | { type: 'permission_response'; request_id: string; allowed: boolean }

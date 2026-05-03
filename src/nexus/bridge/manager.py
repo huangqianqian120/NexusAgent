@@ -45,6 +45,7 @@ class BridgeSessionManager:
         return handle
 
     def list_sessions(self) -> list[BridgeSessionRecord]:
+        self._prune_old_entries()
         items: list[BridgeSessionRecord] = []
         for session_id, handle in self._sessions.items():
             process = handle.process
@@ -82,16 +83,34 @@ class BridgeSessionManager:
             raise ValueError(f"Unknown bridge session: {session_id}")
         await handle.kill()
 
+    MAX_SESSIONS = 200  # 防止内存无限增长
+
     async def _copy_output(self, session_id: str, handle: SessionHandle) -> None:
-        path = self._output_paths[session_id]
-        if handle.process.stdout is not None:
-            while True:
-                chunk = await handle.process.stdout.read(4096)
-                if not chunk:
-                    break
-                with path.open("ab") as stream:
-                    stream.write(chunk)
-        await handle.process.wait()
+        """持续复制进程输出到日志文件，进程结束后自动清理任务引用。"""
+        try:
+            path = self._output_paths[session_id]
+            if handle.process.stdout is not None:
+                while True:
+                    chunk = await handle.process.stdout.read(4096)
+                    if not chunk:
+                        break
+                    with path.open("ab") as stream:
+                        stream.write(chunk)
+            await handle.process.wait()
+        finally:
+            self._copy_tasks.pop(session_id, None)
+
+    def _prune_old_entries(self) -> None:
+        """超过上限时移除最旧的已完成/失败会话。"""
+        if len(self._sessions) <= self.MAX_SESSIONS:
+            return
+        sessions = self.list_sessions()
+        completed = [s for s in sessions if s.status in ('completed', 'failed')]
+        excess = len(self._sessions) - self.MAX_SESSIONS
+        for session in completed[-excess:]:
+            self._sessions.pop(session.session_id, None)
+            self._commands.pop(session.session_id, None)
+            self._output_paths.pop(session.session_id, None)
 
 
 _DEFAULT_MANAGER: BridgeSessionManager | None = None

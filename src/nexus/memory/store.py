@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 import math
@@ -412,8 +412,6 @@ class MemoryStore:
             content = self._content.get(memory_id)
             token_cost = self._estimate_tokens(content.body if content else entry.summary)
 
-            # Determine context layer
-            context_layer = entry.metadata.get("context_layer", "l0")
             selected = False
 
             if len(result_entries) >= query.limit:

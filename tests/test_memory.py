@@ -1,7 +1,6 @@
 """Tests for memory system."""
 
-import pytest
-from nexus.memory.types import MemoryEntry, MemoryType, utc_now
+from nexus.memory.types import MemoryEntry, MemoryType
 
 
 class TestMemoryTypes:

@@ -57,6 +57,55 @@ interface UseWebSocketReturn {
   disconnect: () => void;
 }
 
+// 创建 Socket.IO 连接并绑定事件处理器
+function createSocket(
+  url: string,
+  handlers: {
+    onConnect: (socket: Socket) => void;
+    onEvent: (event: BackendEvent) => void;
+  }
+): Socket {
+  const socket = io(url, {
+    transports: ['polling', 'websocket'],
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+  });
+
+  socket.on('connect', () => handlers.onConnect(socket));
+
+  socket.on('disconnect', () => {
+    // handled by shared state
+  });
+
+  socket.on('message', (data: unknown) => {
+    let raw: string;
+    if (typeof data === 'string') {
+      raw = data;
+    } else if (Array.isArray(data)) {
+      raw = data[0];
+    } else if (data && typeof data === 'object' && 'data' in data) {
+      raw = typeof (data as Record<string, unknown>).data === 'string'
+        ? (data as Record<string, string>).data
+        : JSON.stringify((data as Record<string, unknown>).data);
+    } else {
+      raw = JSON.stringify(data);
+    }
+    if (!raw.startsWith(PROTOCOL_PREFIX)) {
+      return;
+    }
+    try {
+      const event: BackendEvent = JSON.parse(raw.slice(PROTOCOL_PREFIX.length));
+      handlers.onEvent(event);
+    } catch {
+      // 忽略解析失败的消息
+    }
+  });
+
+  return socket;
+}
+
 export function useWebSocket(url: string): UseWebSocketReturn {
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
   const [status, setStatus] = useState<AppState | null>(null);
@@ -66,131 +115,32 @@ export function useWebSocket(url: string): UseWebSocketReturn {
   const [permissionRequest, setPermissionRequest] = useState<PermissionRequest | null>(null);
   const [questionRequest, setQuestionRequest] = useState<QuestionRequest | null>(null);
   const [commands, setCommands] = useState<string[]>([]);
-  const [busy] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [thinking, setThinking] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const assistantBufferRef = useRef<string>('');
   const inProgressIndexRef = useRef<number>(-1);
-  const lastUserMessageRef = useRef<number>(0);
-  const reconnectAttemptRef = useRef<number>(0);
 
-  const sendRequest = useCallback((request: FrontendRequest) => {
-    if (socketRef.current?.connected) {
-      // Set thinking state when user sends a message
-      if (request.type === 'submit_line') {
-        setThinking(true);
-        lastUserMessageRef.current = Date.now();
-      }
-      socketRef.current.emit('message', JSON.stringify(request));
-    }
-  }, []);
-
-  const clearSelectRequest = useCallback(() => setSelectRequest(null), []);
-  const clearPermissionRequest = useCallback(() => setPermissionRequest(null), []);
-  const clearQuestionRequest = useCallback(() => setQuestionRequest(null), []);
-
-  useEffect(() => {
-    const socket = io(url, {
-      transports: ['polling', 'websocket'],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-    });
-    socketRef.current = socket;
-
-    socket.on('connect', () => {
-      console.log('WebSocket connected');
-      setReady(true);
-      setReconnecting(false);
-      reconnectAttemptRef.current = 0;
-      socket.emit('session_start', {});
-    });
-
-    socket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
-      setReady(false);
-    });
-
-    socket.on('reconnect_attempt', () => {
-      console.log('WebSocket reconnecting...', reconnectAttemptRef.current + 1);
-      setReconnecting(true);
-      reconnectAttemptRef.current += 1;
-    });
-
-    socket.on('reconnect_failed', () => {
-      console.error('WebSocket reconnection failed');
-      setReconnecting(false);
-    });
-
-    socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
-    });
-
-    socket.on('message', (data: any) => {
-      console.log('Raw message received:', typeof data, data);
-      // Socket.IO 5.x may send data in different formats
-      let raw: string;
-      if (typeof data === 'string') {
-        raw = data;
-      } else if (Array.isArray(data)) {
-        raw = data[0];
-      } else if (data?.data) {
-        raw = typeof data.data === 'string' ? data.data : JSON.stringify(data.data);
-      } else {
-        raw = JSON.stringify(data);
-      }
-      if (!raw.startsWith(PROTOCOL_PREFIX)) {
-        console.log('Ignoring non-protocol message');
-        return;
-      }
-      try {
-        const event: BackendEvent = JSON.parse(raw.slice(PROTOCOL_PREFIX.length));
-        handleEvent(event);
-      } catch (e) {
-        console.error('Failed to parse event:', e);
-      }
-    });
-
-    socket.on('error', (error: Error) => {
-      console.error('WebSocket error:', error);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [url]);
-
-  const handleEvent = (event: BackendEvent) => {
+  const handleEvent = useCallback((event: BackendEvent) => {
     switch (event.type) {
       case 'ready':
         setStatus(event.state || null);
         setCommands(event.commands || []);
-        if (event.tasks) {
-          // Handle tasks snapshot
-        }
         setReady(true);
+        setBusy(false);
         break;
 
       case 'state_snapshot':
         if (event.state) {
           setStatus(event.state);
         }
-        if (event.mcp_servers) {
-          // Handle MCP servers
-        }
-        break;
-
-      case 'tasks_snapshot':
-        // Handle tasks
         break;
 
       case 'transcript_item':
         if (event.item) {
           setTranscript((prev) => [...prev, { ...event.item!, timestamp: Date.now() }]);
           assistantBufferRef.current = '';
-          // Reset in-progress tracking when user sends a new message
-          if (event.item.role === 'user') {
+          if (event.item!.role === 'user') {
             inProgressIndexRef.current = -1;
           }
         }
@@ -202,14 +152,12 @@ export function useWebSocket(url: string): UseWebSocketReturn {
           assistantBufferRef.current += event.message;
           setTranscript((prev) => {
             const newTranscript = [...prev];
-            // Use in-progress index to track current assistant message
             if (inProgressIndexRef.current >= 0 && inProgressIndexRef.current < newTranscript.length) {
               newTranscript[inProgressIndexRef.current] = {
                 ...newTranscript[inProgressIndexRef.current],
                 text: assistantBufferRef.current,
               };
             } else {
-              // First delta for this message - create new assistant entry and track it
               const newIndex = newTranscript.length;
               newTranscript.push({
                 role: 'assistant',
@@ -224,14 +172,13 @@ export function useWebSocket(url: string): UseWebSocketReturn {
         break;
 
       case 'assistant_complete':
+        setBusy(false);
         if (event.item) {
           setTranscript((prev) => {
             const newTranscript = [...prev];
-            // Use in-progress index to update the correct assistant message
             if (inProgressIndexRef.current >= 0 && inProgressIndexRef.current < newTranscript.length) {
               newTranscript[inProgressIndexRef.current] = event.item!;
             } else {
-              // Fallback: find last assistant or push new
               const lastIndex = newTranscript.findLastIndex(
                 (item: TranscriptItem) => item.role === 'assistant'
               );
@@ -253,10 +200,6 @@ export function useWebSocket(url: string): UseWebSocketReturn {
         if (event.item) {
           setTranscript((prev) => [...prev, event.item!]);
         }
-        break;
-
-      case 'tool_completed':
-        // Update tool result
         break;
 
       case 'select_request':
@@ -288,6 +231,7 @@ export function useWebSocket(url: string): UseWebSocketReturn {
 
       case 'error':
         setThinking(false);
+        setBusy(false);
         if (event.message) {
           const friendlyMessage = formatUserError(event.message);
           setTranscript((prev) => [
@@ -302,12 +246,6 @@ export function useWebSocket(url: string): UseWebSocketReturn {
         }
         break;
 
-      case 'shutdown':
-        // Don't set ready=false on shutdown - let user continue
-        // The session may still be usable after a brief shutdown
-        console.log('Received shutdown event, keeping ready=true');
-        break;
-
       case 'clear_transcript':
         setTranscript([]);
         break;
@@ -318,80 +256,91 @@ export function useWebSocket(url: string): UseWebSocketReturn {
         }
         break;
     }
-  };
+  }, []);
 
-  const resumeSession = useCallback((sessionId: string) => {
-    if (socketRef.current?.connected) {
-      // Disconnect current session first
-      socketRef.current.disconnect();
-    }
-
-    // Create new socket for the session
-    const newSocket = io(url, {
-      transports: ['polling', 'websocket'],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+  // 主连接初始化
+  useEffect(() => {
+    const socket = createSocket(url, {
+      onConnect: () => {
+        setReady(true);
+        setReconnecting(false);
+        socket.emit('session_start', {});
+      },
+      onEvent: handleEvent,
     });
 
-    socketRef.current = newSocket;
+    socket.on('disconnect', () => setReady(false));
 
-    newSocket.on('connect', () => {
-      console.log('WebSocket connected for session resume:', sessionId);
-      setReady(true);
-      setReconnecting(false);
-      setTranscript([]); // Clear transcript for new session
-      newSocket.emit('session_resume', { session_id: sessionId });
-    });
-
-    newSocket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
-      setReady(false);
-    });
-
-    newSocket.on('reconnect_attempt', () => {
-      console.log('WebSocket reconnecting...');
+    socket.on('reconnect_attempt', () => {
       setReconnecting(true);
     });
 
-    newSocket.on('reconnect_failed', () => {
-      console.error('WebSocket reconnection failed');
-      setReconnecting(false);
+    socket.on('reconnect_failed', () => setReconnecting(false));
+
+    socket.on('connect_error', () => {
+      // 连接错误由 reconnect 机制处理
     });
 
-    newSocket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
+    socket.on('error', () => {
+      // Socket 级别错误
     });
 
-    newSocket.on('message', (data: any) => {
-      console.log('Raw message received:', typeof data, data);
-      let raw: string;
-      if (typeof data === 'string') {
-        raw = data;
-      } else if (Array.isArray(data)) {
-        raw = data[0];
-      } else if (data?.data) {
-        raw = typeof data.data === 'string' ? data.data : JSON.stringify(data.data);
-      } else {
-        raw = JSON.stringify(data);
+    socketRef.current = socket;
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [url, handleEvent]);
+
+  const sendRequest = useCallback((request: FrontendRequest) => {
+    if (socketRef.current?.connected) {
+      if (request.type === 'submit_line') {
+        setThinking(true);
+        setBusy(true);
       }
-      if (!raw.startsWith(PROTOCOL_PREFIX)) {
-        console.log('Ignoring non-protocol message');
-        return;
-      }
-      try {
-        const event: BackendEvent = JSON.parse(raw.slice(PROTOCOL_PREFIX.length));
-        handleEvent(event);
-      } catch (e) {
-        console.error('Failed to parse event:', e);
-      }
+      socketRef.current.emit('message', JSON.stringify(request));
+    }
+  }, []);
+
+  const clearSelectRequest = useCallback(() => setSelectRequest(null), []);
+  const clearPermissionRequest = useCallback(() => setPermissionRequest(null), []);
+  const clearQuestionRequest = useCallback(() => setQuestionRequest(null), []);
+
+  const resumeSession = useCallback((sessionId: string) => {
+    // 断开当前连接
+    if (socketRef.current?.connected) {
+      socketRef.current.disconnect();
+    }
+
+    const newSocket = createSocket(url, {
+      onConnect: () => {
+        setReady(true);
+        setReconnecting(false);
+        setTranscript([]);
+        setBusy(false);
+        newSocket.emit('session_resume', { session_id: sessionId });
+      },
+      onEvent: handleEvent,
     });
 
-    newSocket.on('error', (error: Error) => {
-      console.error('WebSocket error:', error);
+    newSocket.on('disconnect', () => setReady(false));
+
+    newSocket.on('reconnect_attempt', () => {
+      setReconnecting(true);
     });
-  }, [url]);
+
+    newSocket.on('reconnect_failed', () => setReconnecting(false));
+
+    newSocket.on('connect_error', () => {
+      // 连接错误由 reconnect 机制处理
+    });
+
+    newSocket.on('error', () => {
+      // Socket 级别错误
+    });
+
+    socketRef.current = newSocket;
+  }, [url, handleEvent]);
 
   const disconnect = useCallback(() => {
     if (socketRef.current) {
@@ -400,6 +349,7 @@ export function useWebSocket(url: string): UseWebSocketReturn {
     }
     setReady(false);
     setTranscript([]);
+    setBusy(false);
   }, []);
 
   return {

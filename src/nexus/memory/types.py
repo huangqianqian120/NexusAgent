@@ -60,8 +60,15 @@ class MemoryEntry:
         return " ".join(part for part in parts if part).lower()
 
 
-# Backward compatibility alias
-MemoryHeader = MemoryEntry
+@dataclass(slots=True)
+class MemoryHeader:
+    """扫描到的记忆文件头信息（独立于 MemoryEntry 存储模型）."""
+    path: Path
+    title: str = ""
+    description: str = ""
+    modified_at: float = 0.0
+    memory_type: str = ""
+    body_preview: str = ""
 
 
 @dataclass(slots=True)

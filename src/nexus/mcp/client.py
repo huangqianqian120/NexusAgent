@@ -7,10 +7,9 @@ import contextlib
 from contextlib import AsyncExitStack
 from typing import Any
 
-import httpx
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from mcp.client.streamable_http import streamable_http_client
+from mcp.client.streamable_http import streamablehttp_client
 from mcp.types import CallToolResult, ReadResourceResult
 
 from nexus.mcp.types import (
@@ -186,11 +185,8 @@ class McpClientManager:
     async def _connect_http(self, name: str, config: McpHttpServerConfig) -> None:
         stack = AsyncExitStack()
         try:
-            http_client = await stack.enter_async_context(
-                httpx.AsyncClient(headers=config.headers or None)
-            )
             read_stream, write_stream, _get_session_id = await stack.enter_async_context(
-                streamable_http_client(config.url, http_client=http_client)
+                streamablehttp_client(config.url, headers=config.headers or None)
             )
             await self._register_connected_session(
                 name=name,
