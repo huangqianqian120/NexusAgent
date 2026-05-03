@@ -90,7 +90,9 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _validate_file_io(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_file_io(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     path = cwd / "smoke.txt"
     contents = path.read_text(encoding="utf-8").strip() if path.exists() else ""
     if started < 2 or completed < 2:
@@ -104,7 +106,9 @@ def _validate_file_io(cwd: Path, final_text: str, tool_names: list[str], started
     return True, contents
 
 
-def _validate_search_edit(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_search_edit(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     path = cwd / "src" / "demo.py"
     contents = path.read_text(encoding="utf-8").strip() if path.exists() else ""
     required = {"write_file", "glob", "grep", "edit_file", "read_file"}
@@ -117,7 +121,9 @@ def _validate_search_edit(cwd: Path, final_text: str, tool_names: list[str], sta
     return True, contents
 
 
-def _validate_phase48(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_phase48(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     path = cwd / "TODO.md"
     contents = path.read_text(encoding="utf-8").strip() if path.exists() else ""
     required = {"tool_search", "todo_write", "read_file"}
@@ -130,7 +136,9 @@ def _validate_phase48(cwd: Path, final_text: str, tool_names: list[str], started
     return True, contents
 
 
-def _validate_task_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_task_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     required = {"task_create", "sleep", "task_output"}
     if not required.issubset(set(tool_names)):
         return False, f"missing required tools: {sorted(required - set(tool_names))}"
@@ -208,7 +216,9 @@ def _setup_worktree_flow(cwd: Path, _: Path) -> None:
     )
     (cwd / "demo.txt").write_text("WORKTREE_OK\n", encoding="utf-8")
     subprocess.run(["git", "add", "-A"], cwd=cwd, check=True, capture_output=True, text=True)
-    subprocess.run(["git", "commit", "-m", "init"], cwd=cwd, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "commit", "-m", "init"], cwd=cwd, check=True, capture_output=True, text=True
+    )
     return None
 
 
@@ -224,7 +234,9 @@ def _setup_issue_pr_context_flow(cwd: Path, _: Path) -> None:
     return None
 
 
-def _validate_skill_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_skill_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     if "skill" not in tool_names:
         return False, f"expected skill tool usage, got {tool_names}"
@@ -233,7 +245,9 @@ def _validate_skill_flow(cwd: Path, final_text: str, tool_names: list[str], star
     return True, final_text
 
 
-def _validate_mcp_model_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_mcp_model_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     if "mcp__fixture__hello" not in tool_names:
         return False, f"expected mcp tool usage, got {tool_names}"
@@ -242,7 +256,9 @@ def _validate_mcp_model_flow(cwd: Path, final_text: str, tool_names: list[str], 
     return True, final_text
 
 
-def _validate_mcp_resource_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_mcp_resource_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     required = {"list_mcp_resources", "read_mcp_resource"}
     if not required.issubset(set(tool_names)):
@@ -252,7 +268,9 @@ def _validate_mcp_resource_flow(cwd: Path, final_text: str, tool_names: list[str
     return True, final_text
 
 
-def _validate_context_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_context_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     path = cwd / "note.env"
     contents = path.read_text(encoding="utf-8").strip() if path.exists() else ""
     required = {"write_file", "read_file"}
@@ -265,7 +283,9 @@ def _validate_context_flow(cwd: Path, final_text: str, tool_names: list[str], st
     return True, contents
 
 
-def _validate_agent_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_agent_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     required = {"agent", "send_message", "sleep", "task_output"}
     if not required.issubset(set(tool_names)):
@@ -277,7 +297,9 @@ def _validate_agent_flow(cwd: Path, final_text: str, tool_names: list[str], star
     return True, final_text
 
 
-def _validate_remote_agent_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_remote_agent_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     required = {"agent", "send_message", "sleep", "task_output"}
     if not required.issubset(set(tool_names)):
@@ -289,7 +311,9 @@ def _validate_remote_agent_flow(cwd: Path, final_text: str, tool_names: list[str
     return True, final_text
 
 
-def _validate_plugin_combo_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_plugin_combo_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     if "skill" not in tool_names:
         return False, f"expected plugin skill usage, got {tool_names}"
@@ -300,7 +324,9 @@ def _validate_plugin_combo_flow(cwd: Path, final_text: str, tool_names: list[str
     return True, final_text
 
 
-def _validate_ask_user_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_ask_user_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     path = cwd / "answer.txt"
     contents = path.read_text(encoding="utf-8").strip() if path.exists() else ""
     required = {"ask_user_question", "write_file", "read_file"}
@@ -313,7 +339,9 @@ def _validate_ask_user_flow(cwd: Path, final_text: str, tool_names: list[str], s
     return True, contents
 
 
-def _validate_task_update_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_task_update_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     required = {"task_create", "task_update", "task_get"}
     if not required.issubset(set(tool_names)):
@@ -325,7 +353,9 @@ def _validate_task_update_flow(cwd: Path, final_text: str, tool_names: list[str]
     return True, final_text
 
 
-def _validate_notebook_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_notebook_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     path = cwd / "analysis.ipynb"
     contents = path.read_text(encoding="utf-8") if path.exists() else ""
     required = {"notebook_edit", "read_file"}
@@ -351,7 +381,9 @@ def _setup_lsp_flow(cwd: Path, _: Path) -> None:
     return None
 
 
-def _validate_lsp_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_lsp_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     required = {"lsp"}
     if not required.issubset(set(tool_names)):
@@ -363,7 +395,9 @@ def _validate_lsp_flow(cwd: Path, final_text: str, tool_names: list[str], starte
     return True, final_text
 
 
-def _validate_cron_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_cron_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     required = {"cron_create", "cron_list", "remote_trigger", "cron_delete"}
     if not required.issubset(set(tool_names)):
@@ -375,7 +409,9 @@ def _validate_cron_flow(cwd: Path, final_text: str, tool_names: list[str], start
     return True, final_text
 
 
-def _validate_worktree_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_worktree_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     worktree_path = cwd / ".nexus" / "worktrees" / "smoke-worktree"
     required = {"enter_worktree", "read_file", "exit_worktree"}
     if not required.issubset(set(tool_names)):
@@ -387,7 +423,9 @@ def _validate_worktree_flow(cwd: Path, final_text: str, tool_names: list[str], s
     return True, final_text
 
 
-def _validate_issue_pr_context_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_issue_pr_context_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     path = cwd / "review_summary.md"
     contents = path.read_text(encoding="utf-8").strip() if path.exists() else ""
     required = {"write_file", "read_file"}
@@ -400,7 +438,9 @@ def _validate_issue_pr_context_flow(cwd: Path, final_text: str, tool_names: list
     return True, contents
 
 
-def _validate_mcp_auth_flow(cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int) -> tuple[bool, str]:
+def _validate_mcp_auth_flow(
+    cwd: Path, final_text: str, tool_names: list[str], started: int, completed: int
+) -> tuple[bool, str]:
     del cwd, started, completed
     required = {"mcp_auth", "mcp__fixture__hello"}
     if not required.issubset(set(tool_names)):
@@ -758,7 +798,9 @@ async def _run_scenario(
 
 async def _run() -> int:
     args = _parse_args()
-    api_key = sys.stdin.readline().strip() if args.api_key_stdin else load_settings().resolve_api_key()
+    api_key = (
+        sys.stdin.readline().strip() if args.api_key_stdin else load_settings().resolve_api_key()
+    )
     if not api_key:
         raise SystemExit("Missing API key.")
 

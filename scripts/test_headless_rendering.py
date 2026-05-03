@@ -68,15 +68,19 @@ async def test_tool_output_format() -> tuple[bool, str]:
     buffer = StringIO()
     renderer.console = Console(file=buffer, force_terminal=True)
 
-    renderer.render_event(ToolExecutionStarted(
-        tool_name="Bash",
-        tool_input={"command": "echo hello"},
-    ))
-    renderer.render_event(ToolExecutionCompleted(
-        tool_name="Bash",
-        output="hello\n",
-        is_error=False,
-    ))
+    renderer.render_event(
+        ToolExecutionStarted(
+            tool_name="Bash",
+            tool_input={"command": "echo hello"},
+        )
+    )
+    renderer.render_event(
+        ToolExecutionCompleted(
+            tool_name="Bash",
+            output="hello\n",
+            is_error=False,
+        )
+    )
 
     output = buffer.getvalue()
     if "Bash" in output or "bash" in output.lower() or "echo" in output:
@@ -96,16 +100,20 @@ async def test_spinner_display() -> tuple[bool, str]:
     buffer = StringIO()
     renderer.console = Console(file=buffer, force_terminal=True)
 
-    renderer.render_event(ToolExecutionStarted(
-        tool_name="Bash",
-        tool_input={"command": "sleep 1"},
-    ))
+    renderer.render_event(
+        ToolExecutionStarted(
+            tool_name="Bash",
+            tool_input={"command": "sleep 1"},
+        )
+    )
     has_spinner = renderer._spinner_status is not None
-    renderer.render_event(ToolExecutionCompleted(
-        tool_name="Bash",
-        output="done",
-        is_error=False,
-    ))
+    renderer.render_event(
+        ToolExecutionCompleted(
+            tool_name="Bash",
+            output="done",
+            is_error=False,
+        )
+    )
     spinner_stopped = renderer._spinner_status is None
 
     if has_spinner and spinner_stopped:

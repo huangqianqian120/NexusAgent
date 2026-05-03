@@ -60,7 +60,9 @@ def _make_command_context(cwd: Path) -> CommandContext:
         cwd=str(cwd),
         tool_registry=tool_registry,
         app_state=AppStateStore(
-            AppState(model="claude-test", permission_mode="default", theme="default", keybindings={})
+            AppState(
+                model="claude-test", permission_mode="default", theme="default", keybindings={}
+            )
         ),
     )
 
@@ -133,7 +135,10 @@ async def _run_plugin_flow(temp_root: Path) -> None:
                 mcp_tool.input_model.model_validate({"name": "plugin"}),
                 ToolExecutionContext(cwd=project),
             )
-            if "Fixture skill content" not in skill_result.output or mcp_result.output != "fixture-hello:plugin":
+            if (
+                "Fixture skill content" not in skill_result.output
+                or mcp_result.output != "fixture-hello:plugin"
+            ):
                 raise AssertionError("plugin flow failed")
             print("[plugin] PASS")
         finally:
@@ -167,7 +172,9 @@ async def _run_bridge_flow(temp_root: Path) -> None:
         cwd=temp_root,
     )
     await handle.process.wait()
-    secret = WorkSecret(version=1, session_ingress_token="tok", api_base_url="http://localhost:8080")
+    secret = WorkSecret(
+        version=1, session_ingress_token="tok", api_base_url="http://localhost:8080"
+    )
     encoded = encode_work_secret(secret)
     decoded = decode_work_secret(encoded)
     url = build_sdk_url(decoded.api_base_url, "abc")

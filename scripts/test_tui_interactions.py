@@ -38,15 +38,17 @@ def test_command_picker_shows() -> tuple[bool, str]:
     env["OPENHARNESS_FRONTEND_SCRIPT"] = json.dumps(["/help", "/exit"])
 
     model_name = env.get("ANTHROPIC_MODEL", "kimi-k2.5")
-    backend_cmd = [sys.executable, "-m", "nexus", "--backend-only",
-                   "--model", model_name]
-    env["OPENHARNESS_FRONTEND_CONFIG"] = json.dumps({
-        "backend_command": backend_cmd,
-        "initial_prompt": None,
-    })
+    backend_cmd = [sys.executable, "-m", "nexus", "--backend-only", "--model", model_name]
+    env["OPENHARNESS_FRONTEND_CONFIG"] = json.dumps(
+        {
+            "backend_command": backend_cmd,
+            "initial_prompt": None,
+        }
+    )
 
     child = pexpect.spawn(
-        "npm", ["exec", "--", "tsx", "src/index.tsx"],
+        "npm",
+        ["exec", "--", "tsx", "src/index.tsx"],
         cwd=str(FRONTEND_DIR),
         env=env,
         timeout=30,
@@ -57,7 +59,10 @@ def test_command_picker_shows() -> tuple[bool, str]:
         output = child.before or ""
         has_welcome = "Oh my Harness!" in output
         if has_welcome:
-            return True, f"TUI launched with welcome banner and shortcuts. Output: {len(output)} chars"
+            return (
+                True,
+                f"TUI launched with welcome banner and shortcuts. Output: {len(output)} chars",
+            )
         return True, f"TUI launched. Output: {len(output)} chars"
     except pexpect.TIMEOUT:
         output = child.before or ""
@@ -76,20 +81,24 @@ def test_permission_flow() -> tuple[bool, str]:
     env = _env()
     env["OPENHARNESS_FRONTEND_RAW_RETURN"] = "1"
     # Ask agent to create a file — should trigger permission
-    env["OPENHARNESS_FRONTEND_SCRIPT"] = json.dumps([
-        "Create a file called /tmp/oh_permission_test.txt with content 'test'",
-    ])
+    env["OPENHARNESS_FRONTEND_SCRIPT"] = json.dumps(
+        [
+            "Create a file called /tmp/oh_permission_test.txt with content 'test'",
+        ]
+    )
 
     model_name = env.get("ANTHROPIC_MODEL", "kimi-k2.5")
-    backend_cmd = [sys.executable, "-m", "nexus", "--backend-only",
-                   "--model", model_name]
-    env["OPENHARNESS_FRONTEND_CONFIG"] = json.dumps({
-        "backend_command": backend_cmd,
-        "initial_prompt": None,
-    })
+    backend_cmd = [sys.executable, "-m", "nexus", "--backend-only", "--model", model_name]
+    env["OPENHARNESS_FRONTEND_CONFIG"] = json.dumps(
+        {
+            "backend_command": backend_cmd,
+            "initial_prompt": None,
+        }
+    )
 
     child = pexpect.spawn(
-        "npm", ["exec", "--", "tsx", "src/index.tsx"],
+        "npm",
+        ["exec", "--", "tsx", "src/index.tsx"],
         cwd=str(FRONTEND_DIR),
         env=env,
         timeout=60,
@@ -106,7 +115,10 @@ def test_permission_flow() -> tuple[bool, str]:
         output = child.before or ""
         # Even if no permission modal (auto mode), tool execution should work
         if "tool" in output.lower() or "bash" in output.lower() or "write" in output.lower():
-            return True, f"Tool execution detected (may be auto-approved). Output: {len(output)} chars"
+            return (
+                True,
+                f"Tool execution detected (may be auto-approved). Output: {len(output)} chars",
+            )
         return True, f"Flow completed. Output: {len(output)} chars"
     except pexpect.TIMEOUT:
         output = child.before or ""
@@ -127,13 +139,16 @@ def test_shortcut_hints_visible() -> tuple[bool, str]:
     env["OPENHARNESS_FRONTEND_SCRIPT"] = json.dumps(["/exit"])
 
     backend_cmd = [sys.executable, "-m", "nexus", "--backend-only"]
-    env["OPENHARNESS_FRONTEND_CONFIG"] = json.dumps({
-        "backend_command": backend_cmd,
-        "initial_prompt": None,
-    })
+    env["OPENHARNESS_FRONTEND_CONFIG"] = json.dumps(
+        {
+            "backend_command": backend_cmd,
+            "initial_prompt": None,
+        }
+    )
 
     child = pexpect.spawn(
-        "npm", ["exec", "--", "tsx", "src/index.tsx"],
+        "npm",
+        ["exec", "--", "tsx", "src/index.tsx"],
         cwd=str(FRONTEND_DIR),
         env=env,
         timeout=20,
@@ -160,9 +175,12 @@ def test_shortcut_hints_visible() -> tuple[bool, str]:
 def test_no_headless_flag() -> tuple[bool, str]:
     """Test that --headless flag is removed."""
     import subprocess
+
     result = subprocess.run(
         [sys.executable, "-m", "nexus", "--help"],
-        capture_output=True, text=True, timeout=10,
+        capture_output=True,
+        text=True,
+        timeout=10,
         cwd=str(PROJECT_ROOT),
     )
     if "--headless" in result.stdout:

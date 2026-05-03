@@ -37,8 +37,12 @@ def _env() -> dict[str, str]:
 def _run_oh(*args: str, timeout: int = 90, cwd: str | None = None) -> subprocess.CompletedProcess:
     cmd = [sys.executable, "-m", "nexus", *args]
     return subprocess.run(
-        cmd, capture_output=True, text=True, timeout=timeout,
-        env=_env(), cwd=cwd or str(PROJECT_ROOT),
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        env=_env(),
+        cwd=cwd or str(PROJECT_ROOT),
     )
 
 
@@ -46,12 +50,16 @@ def _run_oh(*args: str, timeout: int = 90, cwd: str | None = None) -> subprocess
 # SKILL TESTS — using real anthropics/skills repo
 # ============================================================
 
+
 async def test_install_real_skills() -> tuple[bool, str]:
     """Copy real skills from anthropics/skills into nexus user skills dir."""
     from nexus.config.paths import get_config_dir
 
     if not SKILLS_REPO.exists():
-        return False, f"Skills repo not found at {SKILLS_REPO}. Run: git clone https://github.com/anthropics/skills /tmp/anthropic-skills"
+        return (
+            False,
+            f"Skills repo not found at {SKILLS_REPO}. Run: git clone https://github.com/anthropics/skills /tmp/anthropic-skills",
+        )
 
     user_skills_dir = get_config_dir() / "skills"
     user_skills_dir.mkdir(parents=True, exist_ok=True)
@@ -154,8 +162,10 @@ async def test_skills_in_prompt_with_real() -> tuple[bool, str]:
 async def test_model_uses_real_skill() -> tuple[bool, str]:
     """Ask the model about a real skill topic and see if it responds correctly."""
     result = _run_oh(
-        "-p", "How do I merge two PDF files in Python? Give me a brief code example.",
-        "--model", os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"),
+        "-p",
+        "How do I merge two PDF files in Python? Give me a brief code example.",
+        "--model",
+        os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"),
     )
     if result.returncode != 0:
         return False, f"Exit {result.returncode}: {result.stderr[:200]}"
@@ -168,6 +178,7 @@ async def test_model_uses_real_skill() -> tuple[bool, str]:
 # ============================================================
 # PLUGIN TESTS — using real compatible plugins
 # ============================================================
+
 
 async def test_install_real_plugins() -> tuple[bool, str]:
     """Copy real plugins into nexus plugin directory."""
@@ -233,8 +244,14 @@ async def test_plugin_commands_discovered() -> tuple[bool, str]:
             details.append(f"{plugin.name}: {cmds}cmd/{skills}skill")
 
     if total_commands == 0 and total_skills == 0:
-        return True, f"Plugins loaded but no commands/skills discovered (may need different manifest format). {len(plugins)} plugins total"
-    return True, f"Discovered {total_commands} commands, {total_skills} skills from plugins: {'; '.join(details[:5])}"
+        return (
+            True,
+            f"Plugins loaded but no commands/skills discovered (may need different manifest format). {len(plugins)} plugins total",
+        )
+    return (
+        True,
+        f"Discovered {total_commands} commands, {total_skills} skills from plugins: {'; '.join(details[:5])}",
+    )
 
 
 async def test_plugin_hook_structure() -> tuple[bool, str]:
@@ -284,14 +301,19 @@ async def test_commit_command_content() -> tuple[bool, str]:
         return False, f"Command content too short: {len(content)} chars"
 
     has_frontmatter = content.startswith("---")
-    return True, f"Found {len(md_files)} command files, commit.md={len(content)} chars, frontmatter={has_frontmatter}"
+    return (
+        True,
+        f"Found {len(md_files)} command files, commit.md={len(content)} chars, frontmatter={has_frontmatter}",
+    )
 
 
 async def test_real_model_with_plugins() -> tuple[bool, str]:
     """Test model call with plugins installed (verifies no crashes from plugin loading)."""
     result = _run_oh(
-        "-p", "Say exactly: plugins test ok",
-        "--model", os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"),
+        "-p",
+        "Say exactly: plugins test ok",
+        "--model",
+        os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"),
     )
     if result.returncode != 0:
         return False, f"Exit {result.returncode}: {result.stderr[:300]}"
@@ -303,6 +325,7 @@ async def test_real_model_with_plugins() -> tuple[bool, str]:
 # ============================================================
 # MAIN
 # ============================================================
+
 
 def main() -> None:
     tests = [

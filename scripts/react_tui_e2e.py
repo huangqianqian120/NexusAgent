@@ -43,7 +43,9 @@ def _submit(child: pexpect.spawn, text: str) -> None:
     time.sleep(0.4)
 
 
-def _isolated_env(permission_mode: str = "full_auto") -> tuple[tempfile.TemporaryDirectory[str], dict[str, str]]:
+def _isolated_env(
+    permission_mode: str = "full_auto",
+) -> tuple[tempfile.TemporaryDirectory[str], dict[str, str]]:
     settings = load_settings()
     temp_dir = tempfile.TemporaryDirectory(prefix="nexus-react-tui-")
     config_dir = Path(temp_dir.name) / "config"
@@ -52,7 +54,9 @@ def _isolated_env(permission_mode: str = "full_auto") -> tuple[tempfile.Temporar
     data_dir.mkdir(parents=True, exist_ok=True)
     payload = settings.model_dump(mode="json")
     payload["permission"]["mode"] = permission_mode
-    (config_dir / "settings.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    (config_dir / "settings.json").write_text(
+        json.dumps(payload, indent=2) + "\n", encoding="utf-8"
+    )
     env = os.environ.copy()
     env["OPENHARNESS_CONFIG_DIR"] = str(config_dir)
     env["OPENHARNESS_DATA_DIR"] = str(data_dir)

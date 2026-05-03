@@ -41,14 +41,17 @@ def test_welcome_banner() -> tuple[bool, str]:
     env["OPENHARNESS_FRONTEND_SCRIPT"] = json.dumps(["/exit"])
 
     backend_cmd = [sys.executable, "-m", "nexus", "--backend-only"]
-    frontend_config = json.dumps({
-        "backend_command": backend_cmd,
-        "initial_prompt": None,
-    })
+    frontend_config = json.dumps(
+        {
+            "backend_command": backend_cmd,
+            "initial_prompt": None,
+        }
+    )
     env["OPENHARNESS_FRONTEND_CONFIG"] = frontend_config
 
     child = pexpect.spawn(
-        "npm", ["exec", "--", "tsx", "src/index.tsx"],
+        "npm",
+        ["exec", "--", "tsx", "src/index.tsx"],
         cwd=str(FRONTEND_DIR),
         env=env,
         timeout=30,
@@ -82,16 +85,25 @@ def test_conversation_flow() -> tuple[bool, str]:
     env["OPENHARNESS_FRONTEND_RAW_RETURN"] = "1"
     env["OPENHARNESS_FRONTEND_SCRIPT"] = json.dumps(["Say exactly: hello world", "/exit"])
 
-    backend_cmd = [sys.executable, "-m", "nexus", "--backend-only",
-                   "--model", env.get("ANTHROPIC_MODEL", "kimi-k2.5")]
-    frontend_config = json.dumps({
-        "backend_command": backend_cmd,
-        "initial_prompt": None,
-    })
+    backend_cmd = [
+        sys.executable,
+        "-m",
+        "nexus",
+        "--backend-only",
+        "--model",
+        env.get("ANTHROPIC_MODEL", "kimi-k2.5"),
+    ]
+    frontend_config = json.dumps(
+        {
+            "backend_command": backend_cmd,
+            "initial_prompt": None,
+        }
+    )
     env["OPENHARNESS_FRONTEND_CONFIG"] = frontend_config
 
     child = pexpect.spawn(
-        "npm", ["exec", "--", "tsx", "src/index.tsx"],
+        "npm",
+        ["exec", "--", "tsx", "src/index.tsx"],
         cwd=str(FRONTEND_DIR),
         env=env,
         timeout=60,
@@ -129,16 +141,18 @@ def test_status_bar() -> tuple[bool, str]:
     env["OPENHARNESS_FRONTEND_SCRIPT"] = json.dumps(["Say hi", "/exit"])
 
     model_name = env.get("ANTHROPIC_MODEL", "kimi-k2.5")
-    backend_cmd = [sys.executable, "-m", "nexus", "--backend-only",
-                   "--model", model_name]
-    frontend_config = json.dumps({
-        "backend_command": backend_cmd,
-        "initial_prompt": None,
-    })
+    backend_cmd = [sys.executable, "-m", "nexus", "--backend-only", "--model", model_name]
+    frontend_config = json.dumps(
+        {
+            "backend_command": backend_cmd,
+            "initial_prompt": None,
+        }
+    )
     env["OPENHARNESS_FRONTEND_CONFIG"] = frontend_config
 
     child = pexpect.spawn(
-        "npm", ["exec", "--", "tsx", "src/index.tsx"],
+        "npm",
+        ["exec", "--", "tsx", "src/index.tsx"],
         cwd=str(FRONTEND_DIR),
         env=env,
         timeout=60,

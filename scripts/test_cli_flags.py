@@ -15,6 +15,7 @@ RED = "\033[91m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
 
+
 def _env() -> dict[str, str]:
     """Return environment with kimi model configuration."""
     env = os.environ.copy()
@@ -58,18 +59,35 @@ def test_help_output() -> tuple[bool, str]:
     if all(checks):
         return True, "All flag groups and subcommands present in help"
     missing = [
-        name for name, ok in zip(
-            ["branding", "Session", "Model", "Output", "Permissions", "Context", "Advanced",
-             "--print", "--model", "--permission-mode", "mcp", "plugin", "auth"],
+        name
+        for name, ok in zip(
+            [
+                "branding",
+                "Session",
+                "Model",
+                "Output",
+                "Permissions",
+                "Context",
+                "Advanced",
+                "--print",
+                "--model",
+                "--permission-mode",
+                "mcp",
+                "plugin",
+                "auth",
+            ],
             checks,
-        ) if not ok
+        )
+        if not ok
     ]
     return False, f"Missing in help output: {missing}"
 
 
 def test_print_mode() -> tuple[bool, str]:
     """Test -p flag: non-interactive mode with real model call."""
-    result = _run_oh("-p", "Say exactly: hello nexus", "--model", os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"))
+    result = _run_oh(
+        "-p", "Say exactly: hello nexus", "--model", os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5")
+    )
     output = result.stdout.strip().lower()
     if result.returncode != 0:
         return False, f"Exit code {result.returncode}: {result.stderr[:200]}"
@@ -81,9 +99,12 @@ def test_print_mode() -> tuple[bool, str]:
 def test_print_json() -> tuple[bool, str]:
     """Test --output-format json with real model call."""
     result = _run_oh(
-        "-p", "Respond with exactly: test123",
-        "--output-format", "json",
-        "--model", os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"),
+        "-p",
+        "Respond with exactly: test123",
+        "--output-format",
+        "json",
+        "--model",
+        os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"),
     )
     if result.returncode != 0:
         return False, f"Exit code {result.returncode}: {result.stderr[:200]}"

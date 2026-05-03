@@ -33,12 +33,17 @@ def _env() -> dict[str, str]:
 def _run_oh(*args: str, timeout: int = 90) -> subprocess.CompletedProcess:
     cmd = [sys.executable, "-m", "nexus", *args]
     return subprocess.run(
-        cmd, capture_output=True, text=True, timeout=timeout,
-        env=_env(), cwd=str(PROJECT_ROOT),
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        env=_env(),
+        cwd=str(PROJECT_ROOT),
     )
 
 
 # ---------- Test: API Retry ----------
+
 
 async def test_api_retry_config() -> tuple[bool, str]:
     """Test that retry configuration is properly set up."""
@@ -63,7 +68,12 @@ async def test_api_retry_config() -> tuple[bool, str]:
 
 async def test_api_retry_real_call() -> tuple[bool, str]:
     """Test that API calls work with retry logic in place (real model call)."""
-    result = _run_oh("-p", "Say exactly: retry test ok", "--model", os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"))
+    result = _run_oh(
+        "-p",
+        "Say exactly: retry test ok",
+        "--model",
+        os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"),
+    )
     if result.returncode != 0:
         return False, f"Exit {result.returncode}: {result.stderr[:200]}"
     if "retry" in result.stdout.lower() or "test" in result.stdout.lower():
@@ -72,6 +82,7 @@ async def test_api_retry_real_call() -> tuple[bool, str]:
 
 
 # ---------- Test: Skills System ----------
+
 
 async def test_skills_loaded() -> tuple[bool, str]:
     """Test that bundled skills are loaded from .md files."""
@@ -125,8 +136,10 @@ async def test_skill_tool_invocation() -> tuple[bool, str]:
 async def test_skill_real_model() -> tuple[bool, str]:
     """Test that the model can use skills via real API call."""
     result = _run_oh(
-        "-p", "Use the /commit skill to explain what a good commit message looks like. Be brief.",
-        "--model", os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"),
+        "-p",
+        "Use the /commit skill to explain what a good commit message looks like. Be brief.",
+        "--model",
+        os.environ.get("ANTHROPIC_MODEL", "kimi-k2.5"),
     )
     if result.returncode != 0:
         return False, f"Exit {result.returncode}: {result.stderr[:200]}"
@@ -138,10 +151,12 @@ async def test_skill_real_model() -> tuple[bool, str]:
 
 # ---------- Test: Parallel Tool Execution ----------
 
+
 async def test_parallel_tools_code() -> tuple[bool, str]:
     """Test that the query loop supports parallel execution path."""
     from nexus.engine.query import run_query
     import inspect
+
     source = inspect.getsource(run_query)
     if "asyncio.gather" not in source:
         return False, "asyncio.gather not found in run_query — parallel path missing"
@@ -151,6 +166,7 @@ async def test_parallel_tools_code() -> tuple[bool, str]:
 
 
 # ---------- Test: Path-Level Permissions ----------
+
 
 async def test_path_permissions_deny() -> tuple[bool, str]:
     """Test that path-level deny rules work."""
@@ -201,6 +217,7 @@ async def test_command_deny_pattern() -> tuple[bool, str]:
 
 
 # ---------- Main ----------
+
 
 def main() -> None:
     tests = [
