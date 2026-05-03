@@ -556,11 +556,11 @@ _BUILTIN_AGENTS: list[AgentDefinition] = [
         name="Explore",
         description=(
             "Fast agent specialized for exploring codebases. Use this when you need to "
-            "quickly find files by patterns (eg. \"src/components/**/*.tsx\"), search code "
-            "for keywords (eg. \"API endpoints\"), or answer questions about the codebase "
-            "(eg. \"how do API endpoints work?\"). When calling this agent, specify the "
-            "desired thoroughness level: \"quick\" for basic searches, \"medium\" for "
-            "moderate exploration, or \"very thorough\" for comprehensive analysis across "
+            'quickly find files by patterns (eg. "src/components/**/*.tsx"), search code '
+            'for keywords (eg. "API endpoints"), or answer questions about the codebase '
+            '(eg. "how do API endpoints work?"). When calling this agent, specify the '
+            'desired thoroughness level: "quick" for basic searches, "medium" for '
+            'moderate exploration, or "very thorough" for comprehensive analysis across '
             "multiple locations and naming conventions."
         ),
         disallowed_tools=["agent", "exit_plan_mode", "file_edit", "file_write", "notebook_edit"],
@@ -747,9 +747,7 @@ def load_agents_dir(directory: Path) -> list[AgentDefinition]:
             tools = _parse_str_list(frontmatter.get("tools"))
 
             # --- disallowed tools ---
-            disallowed_raw = frontmatter.get(
-                "disallowedTools", frontmatter.get("disallowed_tools")
-            )
+            disallowed_raw = frontmatter.get("disallowedTools", frontmatter.get("disallowed_tools"))
             disallowed_tools = _parse_str_list(disallowed_raw)
 
             # --- model ---
@@ -845,9 +843,7 @@ def load_agents_dir(directory: Path) -> list[AgentDefinition]:
                 critical_system_reminder = csr_raw
 
             # --- requiredMcpServers ---
-            rms_raw = frontmatter.get(
-                "requiredMcpServers", frontmatter.get("required_mcp_servers")
-            )
+            rms_raw = frontmatter.get("requiredMcpServers", frontmatter.get("required_mcp_servers"))
             required_mcp_servers = _parse_str_list(rms_raw)
 
             # --- permissions (Python-specific) ---

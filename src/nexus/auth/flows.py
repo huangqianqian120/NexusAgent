@@ -79,7 +79,9 @@ class DeviceCodeFlow(AuthFlow):
         try:
             plat = platform.system()
             if plat == "Darwin":
-                subprocess.Popen(["open", url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.Popen(
+                    ["open", url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
                 return True
             if plat == "Windows":
                 subprocess.Popen(
@@ -160,7 +162,9 @@ class BrowserFlow(AuthFlow):
     back a token/code — this simple implementation prompts for that value.
     """
 
-    def __init__(self, auth_url: str, prompt_text: str = "Paste the token from your browser") -> None:
+    def __init__(
+        self, auth_url: str, prompt_text: str = "Paste the token from your browser"
+    ) -> None:
         self.auth_url = auth_url
         self.prompt_text = prompt_text
 

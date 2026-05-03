@@ -21,7 +21,9 @@ class TaskStopTool(BaseTool):
     description = "Stop a background task."
     input_model = TaskStopToolInput
 
-    async def execute(self, arguments: TaskStopToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: TaskStopToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         del context
         try:
             task = await get_task_manager().stop_task(arguments.task_id)

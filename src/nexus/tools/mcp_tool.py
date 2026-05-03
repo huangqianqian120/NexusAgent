@@ -52,7 +52,9 @@ def _input_model_from_schema(tool_name: str, schema: dict[str, object]) -> type[
         return create_model(f"{tool_name.title()}Input")
 
     fields = {}
-    required = set(schema.get("required", [])) if isinstance(schema.get("required", []), list) else set()
+    required = (
+        set(schema.get("required", [])) if isinstance(schema.get("required", []), list) else set()
+    )
     for key in properties:
         prop = properties[key] if isinstance(properties[key], dict) else {}
         py_type = _JSON_TYPE_MAP.get(str(prop.get("type", "")), object)

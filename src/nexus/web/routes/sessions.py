@@ -15,20 +15,23 @@ def register_routes(app):
             from nexus.services.session_backend import DEFAULT_SESSION_BACKEND
             import os
             from datetime import datetime
+
             cwd = os.getcwd()
             sessions = DEFAULT_SESSION_BACKEND.list_snapshots(cwd, limit=50)
             formatted = []
             for s in sessions:
                 ts = s.get("created_at", 0)
                 created = datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M") if ts else "N/A"
-                formatted.append({
-                    "id": s["session_id"],
-                    "summary": s.get("summary", "(no summary)"),
-                    "message_count": s.get("message_count", 0),
-                    "model": s.get("model", ""),
-                    "created_at": created,
-                    "timestamp": ts,
-                })
+                formatted.append(
+                    {
+                        "id": s["session_id"],
+                        "summary": s.get("summary", "(no summary)"),
+                        "message_count": s.get("message_count", 0),
+                        "model": s.get("model", ""),
+                        "created_at": created,
+                        "timestamp": ts,
+                    }
+                )
             return jsonify({"sessions": formatted})
         except Exception as e:
             log.error(f"Error listing sessions: {e}")
@@ -39,6 +42,7 @@ def register_routes(app):
         try:
             from nexus.services.session_backend import DEFAULT_SESSION_BACKEND
             import os
+
             cwd = os.getcwd()
             session = DEFAULT_SESSION_BACKEND.load_by_id(cwd, session_id)
             if session is None:
@@ -61,6 +65,7 @@ def register_routes(app):
         try:
             from nexus.services.session_backend import DEFAULT_SESSION_BACKEND
             import os
+
             cwd = os.getcwd()
             session_dir = DEFAULT_SESSION_BACKEND.get_session_dir(cwd)
             session_path = session_dir / f"session-{session_id}.json"
@@ -76,6 +81,7 @@ def register_routes(app):
         try:
             from nexus.services.session_backend import DEFAULT_SESSION_BACKEND
             import os
+
             cwd = os.getcwd()
             session = DEFAULT_SESSION_BACKEND.load_by_id(cwd, session_id)
             if session is None:

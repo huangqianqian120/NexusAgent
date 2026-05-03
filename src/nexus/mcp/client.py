@@ -61,7 +61,9 @@ class McpClientManager:
         """Reconnect all configured servers."""
         await self.close()
         self._statuses = {
-            name: McpConnectionStatus(name=name, state="pending", transport=getattr(config, "type", "unknown"))
+            name: McpConnectionStatus(
+                name=name, state="pending", transport=getattr(config, "type", "unknown")
+            )
             for name, config in self._server_configs.items()
         }
         await self.connect_all()

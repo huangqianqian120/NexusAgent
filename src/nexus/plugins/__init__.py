@@ -21,7 +21,12 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    if name in {"discover_plugin_paths", "get_project_plugins_dir", "get_user_plugins_dir", "load_plugins"}:
+    if name in {
+        "discover_plugin_paths",
+        "get_project_plugins_dir",
+        "get_user_plugins_dir",
+        "load_plugins",
+    }:
         from nexus.plugins.loader import (
             discover_plugin_paths,
             get_project_plugins_dir,

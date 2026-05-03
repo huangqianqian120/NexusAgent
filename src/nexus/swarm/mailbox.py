@@ -260,13 +260,9 @@ def create_shutdown_request(sender: str, recipient: str) -> MailboxMessage:
     return _make_message("shutdown", sender, recipient, {})
 
 
-def create_idle_notification(
-    sender: str, recipient: str, summary: str
-) -> MailboxMessage:
+def create_idle_notification(sender: str, recipient: str, summary: str) -> MailboxMessage:
     """Create an idle-notification message with a brief summary."""
-    return _make_message(
-        "idle_notification", sender, recipient, {"summary": summary}
-    )
+    return _make_message("idle_notification", sender, recipient, {"summary": summary})
 
 
 # ---------------------------------------------------------------------------

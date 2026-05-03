@@ -27,10 +27,16 @@ class LspToolInput(BaseModel):
         "find_references",
         "hover",
     ] = Field(description="The code intelligence operation to perform")
-    file_path: str | None = Field(default=None, description="Path to the source file for file-based operations")
+    file_path: str | None = Field(
+        default=None, description="Path to the source file for file-based operations"
+    )
     symbol: str | None = Field(default=None, description="Explicit symbol name to look up")
-    line: int | None = Field(default=None, ge=1, description="1-based line number for position-based lookups")
-    character: int | None = Field(default=None, ge=1, description="1-based character offset for position-based lookups")
+    line: int | None = Field(
+        default=None, ge=1, description="1-based line number for position-based lookups"
+    )
+    character: int | None = Field(
+        default=None, ge=1, description="1-based character offset for position-based lookups"
+    )
     query: str | None = Field(default=None, description="Substring query for workspace_symbol")
 
     @model_validator(mode="after")
@@ -73,10 +79,14 @@ class LspTool(BaseTool):
         if not file_path.exists():
             return ToolResult(output=f"File not found: {file_path}", is_error=True)
         if file_path.suffix != ".py":
-            return ToolResult(output="The lsp tool currently supports Python files only.", is_error=True)
+            return ToolResult(
+                output="The lsp tool currently supports Python files only.", is_error=True
+            )
 
         if arguments.operation == "document_symbol":
-            return ToolResult(output=_format_symbol_locations(list_document_symbols(file_path), root))
+            return ToolResult(
+                output=_format_symbol_locations(list_document_symbols(file_path), root)
+            )
 
         if arguments.operation == "go_to_definition":
             results = go_to_definition(
@@ -151,4 +161,3 @@ def _format_references(results: list[tuple[Path, int, str]], root: Path) -> str:
     if not results:
         return "(no results)"
     return "\n".join(f"{_display_path(path, root)}:{line}:{text}" for path, line, text in results)
-

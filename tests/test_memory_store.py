@@ -1,6 +1,5 @@
 """FileIndexStore 和 FileContentStore 单元测试."""
 
-
 import pytest
 
 from nexus.memory.store import (
@@ -85,6 +84,7 @@ class TestScoringFunctions:
 
     def test_graph_score_with_relations(self):
         from nexus.memory.types import MemoryRelation
+
         entry = MemoryEntry(
             id="test",
             name="test",
@@ -173,15 +173,17 @@ class TestFileIndexStore:
         assert store.delete("nonexistent") is False
 
     def test_search_by_text(self, store):
-        store.upsert(MemoryEntry(
-            id="py", name="Python指南", summary="Python 编程语言的最佳实践", tags=["python"]
-        ))
-        store.upsert(MemoryEntry(
-            id="rust", name="Rust指南", summary="Rust 系统编程语言", tags=["rust"]
-        ))
-        store.upsert(MemoryEntry(
-            id="js", name="JavaScript指南", summary="JavaScript 前端开发", tags=["js"]
-        ))
+        store.upsert(
+            MemoryEntry(
+                id="py", name="Python指南", summary="Python 编程语言的最佳实践", tags=["python"]
+            )
+        )
+        store.upsert(
+            MemoryEntry(id="rust", name="Rust指南", summary="Rust 系统编程语言", tags=["rust"])
+        )
+        store.upsert(
+            MemoryEntry(id="js", name="JavaScript指南", summary="JavaScript 前端开发", tags=["js"])
+        )
 
         query = MemoryQuery(text="Python 编程", limit=5)
         results = store.search(query)
@@ -190,9 +192,7 @@ class TestFileIndexStore:
         assert results[0][0].id == "py"
 
     def test_search_archived_excluded(self, store):
-        store.upsert(MemoryEntry(
-            id="archived", name="已归档", status=RecordStatus.ARCHIVED
-        ))
+        store.upsert(MemoryEntry(id="archived", name="已归档", status=RecordStatus.ARCHIVED))
         query = MemoryQuery(text="已归档", limit=5)
         results = store.search(query)
         # 已归档的不应出现在搜索结果中

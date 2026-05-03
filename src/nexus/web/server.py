@@ -47,6 +47,7 @@ _cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://loc
 
 if not _secret_key:
     import warnings
+
     warnings.warn(
         "SECRET_KEY not set via environment variable. "
         "Using a predictable default is insecure for production. "
@@ -62,10 +63,13 @@ app.config["CORS_ALLOWED_ORIGINS"] = _cors_origins
 
 # Enable CORS only for specified origins
 _allowed_origins = [o.strip() for o in _cors_origins.split(",") if o.strip()]
-CORS(app, resources={
-    r"/api/*": {"origins": _allowed_origins},
-    r"/socket.io/*": {"origins": _allowed_origins},
-})
+CORS(
+    app,
+    resources={
+        r"/api/*": {"origins": _allowed_origins},
+        r"/socket.io/*": {"origins": _allowed_origins},
+    },
+)
 
 # Create SocketIO instance
 socketio = SocketIO(
@@ -96,12 +100,11 @@ class SocketIOWebAdapter:
             self._socket.emit("message", PROTOCOL_PREFIX + payload)
 
     async def receive_text(self) -> str:
-        return await asyncio.get_event_loop().run_in_executor(
-            None, self._request_queue.get
-        )
+        return await asyncio.get_event_loop().run_in_executor(None, self._request_queue.get)
 
     def queue_request(self, request: dict) -> None:
         from nexus.ui.protocol import FrontendRequest
+
         try:
             req = FrontendRequest.model_validate(request)
             self._request_queue.put_nowait(req)
@@ -110,6 +113,7 @@ class SocketIOWebAdapter:
 
     def close(self) -> None:
         from nexus.ui.protocol import FrontendRequest
+
         self._request_queue.put_nowait(FrontendRequest(type="shutdown"))
 
 
@@ -204,7 +208,9 @@ class SocketIOBackendHost(WebBackendHost):
                         continue
                     self._busy = True
                     try:
-                        should_continue = await self._apply_select_command(request.command or "", request.value or "")
+                        should_continue = await self._apply_select_command(
+                            request.command or "", request.value or ""
+                        )
                     finally:
                         self._busy = False
                     if not should_continue:
@@ -236,12 +242,17 @@ class SocketIOBackendHost(WebBackendHost):
     async def _process_line(self, line: str, *, transcript_line: str | None = None) -> bool:
         assert self._bundle is not None
         await self._emit(
-            BackendEvent(type="transcript_item", item=TranscriptItem(role="user", text=transcript_line or line))
+            BackendEvent(
+                type="transcript_item",
+                item=TranscriptItem(role="user", text=transcript_line or line),
+            )
         )
 
         async def _print_system(message: str) -> None:
             await self._emit(
-                BackendEvent(type="transcript_item", item=TranscriptItem(role="system", text=message))
+                BackendEvent(
+                    type="transcript_item", item=TranscriptItem(role="system", text=message)
+                )
             )
 
         async def _render_event(event: StreamEvent) -> None:
@@ -251,17 +262,21 @@ class SocketIOBackendHost(WebBackendHost):
             if isinstance(event, CompactProgressEvent):
                 await self._emit(
                     BackendEvent(
-                        type="compact_progress", compact_phase=event.phase,
-                        compact_trigger=event.trigger, attempt=event.attempt,
+                        type="compact_progress",
+                        compact_phase=event.phase,
+                        compact_trigger=event.trigger,
+                        attempt=event.attempt,
                         compact_checkpoint=event.checkpoint,
-                        compact_metadata=event.metadata, message=event.message,
+                        compact_metadata=event.metadata,
+                        message=event.message,
                     )
                 )
                 return
             if isinstance(event, AssistantTurnComplete):
                 await self._emit(
                     BackendEvent(
-                        type="assistant_complete", message=event.message.text.strip(),
+                        type="assistant_complete",
+                        message=event.message.text.strip(),
                         item=TranscriptItem(role="assistant", text=event.message.text.strip()),
                     )
                 )
@@ -271,11 +286,14 @@ class SocketIOBackendHost(WebBackendHost):
                 self._last_tool_inputs[event.tool_name] = event.tool_input or {}
                 await self._emit(
                     BackendEvent(
-                        type="tool_started", tool_name=event.tool_name,
+                        type="tool_started",
+                        tool_name=event.tool_name,
                         tool_input=event.tool_input,
                         item=TranscriptItem(
-                            role="tool", text=f"{event.tool_name} {json.dumps(event.tool_input, ensure_ascii=True)}",
-                            tool_name=event.tool_name, tool_input=event.tool_input,
+                            role="tool",
+                            text=f"{event.tool_name} {json.dumps(event.tool_input, ensure_ascii=True)}",
+                            tool_name=event.tool_name,
+                            tool_input=event.tool_input,
                         ),
                     )
                 )
@@ -283,11 +301,15 @@ class SocketIOBackendHost(WebBackendHost):
             if isinstance(event, ToolExecutionCompleted):
                 await self._emit(
                     BackendEvent(
-                        type="tool_completed", tool_name=event.tool_name,
-                        output=event.output, is_error=event.is_error,
+                        type="tool_completed",
+                        tool_name=event.tool_name,
+                        output=event.output,
+                        is_error=event.is_error,
                         item=TranscriptItem(
-                            role="tool_result", text=event.output,
-                            tool_name=event.tool_name, is_error=event.is_error,
+                            role="tool_result",
+                            text=event.output,
+                            tool_name=event.tool_name,
+                            is_error=event.is_error,
                         ),
                     )
                 )
@@ -304,7 +326,9 @@ class SocketIOBackendHost(WebBackendHost):
                                 text = item.get("content") or item.get("text") or str(item)
                                 lines.append(f"- [{'x' if checked else ' '}] {text}")
                         if lines:
-                            await self._emit(BackendEvent(type="todo_update", todo_markdown="\n".join(lines)))
+                            await self._emit(
+                                BackendEvent(type="todo_update", todo_markdown="\n".join(lines))
+                            )
                 if event.tool_name in ("set_permission_mode", "plan_mode"):
                     assert self._bundle is not None
                     new_mode = self._bundle.app_state.get().permission_mode
@@ -313,12 +337,18 @@ class SocketIOBackendHost(WebBackendHost):
             if isinstance(event, ErrorEvent):
                 await self._emit(BackendEvent(type="error", message=event.message))
                 await self._emit(
-                    BackendEvent(type="transcript_item", item=TranscriptItem(role="system", text=event.message))
+                    BackendEvent(
+                        type="transcript_item",
+                        item=TranscriptItem(role="system", text=event.message),
+                    )
                 )
                 return
             if isinstance(event, StatusEvent):
                 await self._emit(
-                    BackendEvent(type="transcript_item", item=TranscriptItem(role="system", text=event.message))
+                    BackendEvent(
+                        type="transcript_item",
+                        item=TranscriptItem(role="system", text=event.message),
+                    )
                 )
                 return
 
@@ -326,8 +356,11 @@ class SocketIOBackendHost(WebBackendHost):
             await self._emit(BackendEvent(type="clear_transcript"))
 
         should_continue = await handle_line(
-            self._bundle, line,
-            print_system=_print_system, render_event=_render_event, clear_output=_clear_output,
+            self._bundle,
+            line,
+            print_system=_print_system,
+            render_event=_render_event,
+            clear_output=_clear_output,
         )
         await self._emit(self._status_snapshot())
         await self._emit(BackendEvent.tasks_snapshot(get_task_manager().list_tasks()))
@@ -336,6 +369,7 @@ class SocketIOBackendHost(WebBackendHost):
 
     async def _read_requests(self) -> None:
         from nexus.ui.protocol import FrontendRequest
+
         log.info("_read_requests: started")
         while True:
             try:
@@ -369,12 +403,18 @@ class SocketIOBackendHost(WebBackendHost):
                 await self._emit_error(f"Invalid request: {exc}")
                 continue
 
-            if request.type == "permission_response" and request.request_id in self._permission_requests:
+            if (
+                request.type == "permission_response"
+                and request.request_id in self._permission_requests
+            ):
                 future = self._permission_requests[request.request_id]
                 if not future.done():
                     future.set_result(bool(request.allowed))
                 continue
-            if request.type == "question_response" and request.request_id in self._question_requests:
+            if (
+                request.type == "question_response"
+                and request.request_id in self._question_requests
+            ):
                 future = self._question_requests[request.request_id]
                 if not future.done():
                     future.set_result(request.answer or "")
@@ -387,6 +427,7 @@ class SocketIOBackendHost(WebBackendHost):
 
     async def _emit_error(self, message: str) -> None:
         from nexus.ui.protocol import BackendEvent
+
         await self._emit(BackendEvent(type="error", message=message))
 
 
@@ -394,20 +435,24 @@ def get_config() -> WebBackendHostConfig:
     """Build WebBackendHostConfig from current settings."""
     import sys
     from pathlib import Path
+
     project_root = Path(__file__).parent.parent.parent.parent
     nexus_path = project_root / "nexus"
     if nexus_path.exists():
-        sys.path = [p for p in sys.path if not p.endswith('/src/nexus') and p != 'src/nexus']
+        sys.path = [p for p in sys.path if not p.endswith("/src/nexus") and p != "src/nexus"]
         sys.path.insert(0, str(project_root))
 
     settings = load_settings()
     profile_name, profile = settings.resolve_profile()
 
     auth_source = profile.auth_source
-    storage_provider = auth_source.replace("_api_key", "") if auth_source.endswith("_api_key") else auth_source
+    storage_provider = (
+        auth_source.replace("_api_key", "") if auth_source.endswith("_api_key") else auth_source
+    )
     api_key = None
 
     from nexus.auth.storage import load_credential
+
     cred = load_credential(storage_provider, "api_key")
     if cred:
         api_key = cred
@@ -415,6 +460,7 @@ def get_config() -> WebBackendHostConfig:
         api_key = settings.api_key
 
     import importlib
+
     workspace_module = importlib.import_module("personal_agent.workspace")
     prompts_module = importlib.import_module("personal_agent.prompts")
     get_workspace_root = workspace_module.get_workspace_root
@@ -425,7 +471,10 @@ def get_config() -> WebBackendHostConfig:
     _workspace = initialize_workspace()
     workspace_root = get_workspace_root()
     system_prompt = build_nexus_system_prompt(
-        os.getcwd(), workspace=workspace_root, extra_prompt=None, include_project_memory=True,
+        os.getcwd(),
+        workspace=workspace_root,
+        extra_prompt=None,
+        include_project_memory=True,
     )
     extra_skill_dirs = (str(get_skills_dir(workspace_root)),)
     extra_plugin_roots = (str(get_plugins_dir(workspace_root)),)
@@ -453,12 +502,14 @@ def get_status():
         settings = load_settings()
         profile_name, profile = settings.resolve_profile()
         manager = AuthManager(settings)
-        return jsonify({
-            "model": profile.last_model or profile.default_model,
-            "provider": profile.provider,
-            "profile": profile_name,
-            "auth_status": manager.get_auth_status().get(profile.provider, {}),
-        })
+        return jsonify(
+            {
+                "model": profile.last_model or profile.default_model,
+                "provider": profile.provider,
+                "profile": profile_name,
+                "auth_status": manager.get_auth_status().get(profile.provider, {}),
+            }
+        )
     except Exception as e:
         log.error(f"Error getting status: {e}")
         return jsonify({"error": str(e)}), 500
@@ -479,11 +530,20 @@ def update_settings():
     try:
         data = request.get_json()
         settings = load_settings()
-        allowed_fields = ["theme", "vim_mode", "voice_mode", "fast_mode", "effort", "passes", "verbose"]
+        allowed_fields = [
+            "theme",
+            "vim_mode",
+            "voice_mode",
+            "fast_mode",
+            "effort",
+            "passes",
+            "verbose",
+        ]
         for field in allowed_fields:
             if field in data:
                 setattr(settings, field, data[field])
         from nexus.config.settings import save_settings
+
         save_settings(settings)
         return jsonify({"status": "ok"})
     except Exception as e:
@@ -495,6 +555,7 @@ def update_settings():
 def get_commands():
     try:
         from nexus.commands.registry import create_default_command_registry
+
         registry = create_default_command_registry()
         commands = [f"/{cmd.name}" for cmd in registry.list_commands()]
         return jsonify({"commands": commands})
@@ -575,6 +636,7 @@ def handle_session_resume(data):
     config = get_config()
     from nexus.services.session_backend import DEFAULT_SESSION_BACKEND
     import os
+
     session_data = DEFAULT_SESSION_BACKEND.load_by_id(os.getcwd(), session_to_resume)
     if session_data:
         config.restore_messages = session_data.get("messages", [])
@@ -587,6 +649,7 @@ def handle_session_resume(data):
 
 
 from nexus.web.routes import register_all_routes
+
 register_all_routes(app)
 
 

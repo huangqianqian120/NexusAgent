@@ -236,7 +236,9 @@ def get_coordinator_user_context(
 
     if mcp_clients:
         server_names = ", ".join(c["name"] for c in mcp_clients)
-        content += f"\n\nWorkers also have access to MCP tools from connected MCP servers: {server_names}"
+        content += (
+            f"\n\nWorkers also have access to MCP tools from connected MCP servers: {server_names}"
+        )
 
     if scratchpad_dir:
         content += (

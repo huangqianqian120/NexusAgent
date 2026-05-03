@@ -21,7 +21,9 @@ class TeamDeleteTool(BaseTool):
     description = "Delete an in-memory team."
     input_model = TeamDeleteToolInput
 
-    async def execute(self, arguments: TeamDeleteToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: TeamDeleteToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         del context
         try:
             get_team_registry().delete_team(arguments.name)

@@ -65,10 +65,12 @@ def build_compact_carryover_message(
 
     lines: list[str] = []
     if permission_mode == "plan":
-        lines.extend([
-            "Plan mode is still active for this session.",
-            "Do not execute mutating tools until the user exits plan mode.",
-        ])
+        lines.extend(
+            [
+                "Plan mode is still active for this session.",
+                "Do not execute mutating tools until the user exits plan mode.",
+            ]
+        )
     if attachment_paths:
         lines.append("Recent local attachments to keep in mind:")
         lines.extend(f"- {path}" for path in attachment_paths)
@@ -211,6 +213,7 @@ def build_compact_summary_message(
 @dataclass
 class AutoCompactState:
     """跨查询循环回合持续的可变状态。"""
+
     compacted: bool = False
     turn_counter: int = 0
     turn_id: str = ""
@@ -519,7 +522,9 @@ async def compact_conversation(
         )
         if hook_note:
             carryover_msg = build_compact_carryover_message(
-                older, metadata=carryover_metadata, hook_note=hook_note,
+                older,
+                metadata=carryover_metadata,
+                hook_note=hook_note,
             )
             result = [summary_msg]
             if carryover_msg is not None:
@@ -529,8 +534,10 @@ async def compact_conversation(
 
     log.info(
         "压缩完成：%d -> %d 条消息，约 %d -> %d tokens（节省约 %d）",
-        len(messages), len(result),
-        pre_compact_tokens, post_compact_tokens,
+        len(messages),
+        len(result),
+        pre_compact_tokens,
+        post_compact_tokens,
         pre_compact_tokens - post_compact_tokens,
     )
     await emit_progress(

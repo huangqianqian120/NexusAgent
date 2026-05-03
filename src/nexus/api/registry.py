@@ -384,8 +384,7 @@ def _match_by_model(model: str) -> ProviderSpec | None:
     # Fall back to keyword scan
     for spec in std_specs:
         if any(
-            kw in model_lower or kw.replace("-", "_") in model_normalized
-            for kw in spec.keywords
+            kw in model_lower or kw.replace("-", "_") in model_normalized for kw in spec.keywords
         ):
             return spec
     return None

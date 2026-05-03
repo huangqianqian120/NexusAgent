@@ -11,6 +11,7 @@ from unittest.mock import patch, MagicMock
 
 try:
     from flask import Flask
+
     HAS_FLASK = True
 except ImportError:
     HAS_FLASK = False
@@ -185,9 +186,7 @@ class TestSessionRoutes:
             }
         ]
 
-        with patch(
-            "nexus.services.session_backend.DEFAULT_SESSION_BACKEND"
-        ) as mock_backend:
+        with patch("nexus.services.session_backend.DEFAULT_SESSION_BACKEND") as mock_backend:
             mock_backend.list_snapshots.return_value = mock_sessions
 
             resp = client.get("/api/v1/sessions")
@@ -199,9 +198,7 @@ class TestSessionRoutes:
 
     def test_get_session_not_found(self, client):
         """GET /api/v1/sessions/<id> 找不到会话时返回 404。"""
-        with patch(
-            "nexus.services.session_backend.DEFAULT_SESSION_BACKEND"
-        ) as mock_backend:
+        with patch("nexus.services.session_backend.DEFAULT_SESSION_BACKEND") as mock_backend:
             mock_backend.load_by_id.return_value = None
 
             resp = client.get("/api/v1/sessions/nonexistent")
@@ -217,9 +214,7 @@ class TestSessionRoutes:
 
     def test_resume_session_not_found(self, client):
         """POST /api/v1/sessions/<id>/resume 找不到会话时返回 404。"""
-        with patch(
-            "nexus.services.session_backend.DEFAULT_SESSION_BACKEND"
-        ) as mock_backend:
+        with patch("nexus.services.session_backend.DEFAULT_SESSION_BACKEND") as mock_backend:
             mock_backend.load_by_id.return_value = None
 
             resp = client.post("/api/v1/sessions/nonexistent/resume")
@@ -245,11 +240,10 @@ class TestSkillRoutes:
         mock_registry = MagicMock()
         mock_registry.list_skills.return_value = [mock_skill]
 
-        with patch(
-            "personal_agent.workspace.get_workspace_root"
-        ) as mock_root, patch(
-            "nexus.skills.load_skill_registry"
-        ) as mock_load:
+        with (
+            patch("personal_agent.workspace.get_workspace_root") as mock_root,
+            patch("nexus.skills.load_skill_registry") as mock_load,
+        ):
             mock_root.return_value = "/tmp/ws"
             mock_load.return_value = mock_registry
 
@@ -265,11 +259,10 @@ class TestSkillRoutes:
         mock_registry = MagicMock()
         mock_registry.get.return_value = None
 
-        with patch(
-            "personal_agent.workspace.get_workspace_root"
-        ), patch(
-            "nexus.skills.load_skill_registry"
-        ) as mock_load:
+        with (
+            patch("personal_agent.workspace.get_workspace_root"),
+            patch("nexus.skills.load_skill_registry") as mock_load,
+        ):
             mock_load.return_value = mock_registry
 
             resp = client.get("/api/v1/skills/nonexistent")
@@ -414,9 +407,7 @@ class TestToolRoutes:
         mock_registry = MagicMock()
         mock_registry.to_api_schema.return_value = [mock_tool_schema]
 
-        with patch(
-            "nexus.tools.create_default_tool_registry"
-        ) as mock_create:
+        with patch("nexus.tools.create_default_tool_registry") as mock_create:
             mock_create.return_value = mock_registry
 
             resp = client.get("/api/v1/tools")
@@ -430,9 +421,7 @@ class TestToolRoutes:
         mock_registry = MagicMock()
         mock_registry.get.return_value = None
 
-        with patch(
-            "nexus.tools.create_default_tool_registry"
-        ) as mock_create:
+        with patch("nexus.tools.create_default_tool_registry") as mock_create:
             mock_create.return_value = mock_registry
 
             resp = client.get("/api/v1/tools/nonexistent")
@@ -444,9 +433,7 @@ class TestToolRoutes:
         mock_registry = MagicMock()
         mock_registry.get.return_value = None
 
-        with patch(
-            "nexus.tools.create_default_tool_registry"
-        ) as mock_create:
+        with patch("nexus.tools.create_default_tool_registry") as mock_create:
             mock_create.return_value = mock_registry
 
             resp = client.post(

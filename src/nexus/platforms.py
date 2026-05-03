@@ -39,7 +39,11 @@ def detect_platform(
     if system == "windows":
         return "windows"
     if system == "linux":
-        if "microsoft" in kernel_release or env_map.get("WSL_DISTRO_NAME") or env_map.get("WSL_INTEROP"):
+        if (
+            "microsoft" in kernel_release
+            or env_map.get("WSL_DISTRO_NAME")
+            or env_map.get("WSL_INTEROP")
+        ):
             return "wsl"
         return "linux"
     return "unknown"
@@ -80,4 +84,3 @@ def get_platform_capabilities(platform_name: PlatformName | None = None) -> Plat
         supports_swarm_mailbox=False,
         supports_sandbox_runtime=False,
     )
-

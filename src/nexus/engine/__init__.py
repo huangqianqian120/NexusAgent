@@ -35,7 +35,13 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    if name in {"ConversationMessage", "ImageBlock", "TextBlock", "ToolResultBlock", "ToolUseBlock"}:
+    if name in {
+        "ConversationMessage",
+        "ImageBlock",
+        "TextBlock",
+        "ToolResultBlock",
+        "ToolUseBlock",
+    }:
         from nexus.engine.messages import (
             ConversationMessage,
             ImageBlock,

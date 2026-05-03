@@ -136,7 +136,7 @@ def normalize_anthropic_model_name(model: str) -> str:
     normalized = model.strip()
     lower = normalized.lower()
     if lower.startswith("anthropic/"):
-        normalized = normalized[len("anthropic/"):]
+        normalized = normalized[len("anthropic/") :]
         lower = normalized.lower()
     if lower.startswith("claude-"):
         return normalized.replace(".", "-")
@@ -347,12 +347,11 @@ def _profile_from_flat_settings(settings: "Settings") -> tuple[str, ProviderProf
     defaults = default_provider_profiles()
     name = _infer_profile_name_from_flat_settings(settings)
     existing = defaults.get(name)
-    if existing is not None and (
-        existing.provider == settings.provider or not settings.provider
-    ) and (
-        existing.api_format == settings.api_format
-    ) and (
-        existing.base_url == settings.base_url
+    if (
+        existing is not None
+        and (existing.provider == settings.provider or not settings.provider)
+        and (existing.api_format == settings.api_format)
+        and (existing.base_url == settings.base_url)
     ):
         profile = existing.model_copy(
             update={
@@ -361,19 +360,27 @@ def _profile_from_flat_settings(settings: "Settings") -> tuple[str, ProviderProf
         )
         return name, profile
 
-    provider = settings.provider or ("copilot" if settings.api_format == "copilot" else ("openai" if settings.api_format == "openai" else "anthropic"))
+    provider = settings.provider or (
+        "copilot"
+        if settings.api_format == "copilot"
+        else ("openai" if settings.api_format == "openai" else "anthropic")
+    )
     profile = ProviderProfile(
         label=f"Imported {provider}",
         provider=provider,
         api_format=settings.api_format,
         auth_source=default_auth_source_for_provider(provider, settings.api_format),
-        default_model=settings.model or defaults.get("claude-api", ProviderProfile(
-            label="Claude API",
-            provider="anthropic",
-            api_format="anthropic",
-            auth_source="anthropic_api_key",
-            default_model="sonnet",
-        )).default_model,
+        default_model=settings.model
+        or defaults.get(
+            "claude-api",
+            ProviderProfile(
+                label="Claude API",
+                provider="anthropic",
+                api_format="anthropic",
+                auth_source="anthropic_api_key",
+                default_model="sonnet",
+            ),
+        ).default_model,
         last_model=settings.model or None,
         base_url=settings.base_url,
     )
@@ -480,7 +487,9 @@ class Settings(BaseModel):
             next_model = flat_model
         else:
             next_model = profile.last_model
-        current_default_auth = default_auth_source_for_provider(profile.provider, profile.api_format)
+        current_default_auth = default_auth_source_for_provider(
+            profile.provider, profile.api_format
+        )
         next_auth_source = profile.auth_source
         if not next_auth_source or next_auth_source == current_default_auth:
             next_auth_source = default_auth_source_for_provider(next_provider, next_api_format)
@@ -546,7 +555,9 @@ class Settings(BaseModel):
         """Resolve auth for the current provider, including subscription bridges."""
         profile_name, profile = self.resolve_profile()
         provider = profile.provider.strip()
-        auth_source = profile.auth_source.strip() or default_auth_source_for_provider(provider, profile.api_format)
+        auth_source = profile.auth_source.strip() or default_auth_source_for_provider(
+            provider, profile.api_format
+        )
         if auth_source in {"codex_subscription", "claude_subscription"}:
             from nexus.auth.external import (
                 is_third_party_anthropic_endpoint,
@@ -554,7 +565,9 @@ class Settings(BaseModel):
             )
             from nexus.auth.storage import load_external_binding
 
-            if auth_source == "claude_subscription" and is_third_party_anthropic_endpoint(profile.base_url):
+            if auth_source == "claude_subscription" and is_third_party_anthropic_endpoint(
+                profile.base_url
+            ):
                 raise ValueError(
                     "Claude subscription auth only supports direct Anthropic/Claude endpoints. "
                     "Use an API-key-backed Anthropic-compatible profile for third-party base URLs."
@@ -654,7 +667,15 @@ class Settings(BaseModel):
         merged = self.model_copy(update=updates)
         if not updates:
             return merged
-        profile_keys = {"model", "base_url", "api_format", "provider", "api_key", "active_profile", "profiles"}
+        profile_keys = {
+            "model",
+            "base_url",
+            "api_format",
+            "provider",
+            "api_key",
+            "active_profile",
+            "profiles",
+        }
         profile_updates = profile_keys.intersection(updates)
         if not profile_updates:
             return merged

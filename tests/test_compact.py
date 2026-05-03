@@ -445,6 +445,7 @@ class TestSanitizeMetadata:
     def test_path_converted_to_string(self):
         """Path 对象转换为字符串。"""
         from pathlib import Path
+
         result = sanitize_metadata(Path("/tmp/test"))
         assert isinstance(result, str)
         assert result == "/tmp/test"
@@ -458,6 +459,7 @@ class TestSanitizeMetadata:
     def test_nested_structures(self):
         """递归处理嵌套结构。"""
         from pathlib import Path
+
         data = {
             "files": [Path("/a"), Path("/b")],
             "count": 5,

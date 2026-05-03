@@ -74,7 +74,9 @@ def detect_provider(settings: Settings) -> ProviderInfo:
             name=spec.name,
             auth_kind=_AUTH_KIND.get(backend, "api_key"),
             voice_supported=False,
-            voice_reason=_VOICE_REASON.get(backend, "voice mode is not supported for this provider"),
+            voice_reason=_VOICE_REASON.get(
+                backend, "voice mode is not supported for this provider"
+            ),
         )
 
     # Fallback: use api_format to pick a sensible default

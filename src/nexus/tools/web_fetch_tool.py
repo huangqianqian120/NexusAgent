@@ -33,7 +33,9 @@ class WebFetchTool(BaseTool):
     description = "Fetch one web page and return compact readable text."
     input_model = WebFetchToolInput
 
-    async def execute(self, arguments: WebFetchToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: WebFetchToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         del context
         is_valid, error_message = _validate_url(arguments.url)
         if not is_valid:
@@ -76,7 +78,9 @@ def _html_to_text(html: str) -> str:
     parser.feed(html)
     parser.close()
     text = " ".join(parser.parts)
-    text = text.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
+    text = (
+        text.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
+    )
     return re.sub(r"[ \t\r\f\v]+", " ", text).replace(" \n", "\n").strip()
 
 

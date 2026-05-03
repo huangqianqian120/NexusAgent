@@ -24,7 +24,9 @@ class TodoWriteTool(BaseTool):
     description = "Append a TODO item to a markdown checklist file."
     input_model = TodoWriteToolInput
 
-    async def execute(self, arguments: TodoWriteToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: TodoWriteToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         path = Path(context.cwd) / arguments.path
         prefix = "- [x]" if arguments.checked else "- [ ]"
         existing = path.read_text(encoding="utf-8") if path.exists() else "# TODO\n"

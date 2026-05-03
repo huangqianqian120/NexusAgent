@@ -80,9 +80,7 @@ class ConversationMessage(BaseModel):
     @property
     def text(self) -> str:
         """Return concatenated text blocks."""
-        return "".join(
-            block.text for block in self.content if isinstance(block, TextBlock)
-        )
+        return "".join(block.text for block in self.content if isinstance(block, TextBlock))
 
     @property
     def tool_uses(self) -> list[ToolUseBlock]:

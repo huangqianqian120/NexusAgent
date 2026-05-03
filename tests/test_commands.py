@@ -17,6 +17,7 @@ from nexus.commands.registry import (
 # 辅助函数
 # ══════════════════════════════════════════════════════════════
 
+
 def _make_user_text(text: str) -> ConversationMessage:
     return ConversationMessage(role="user", content=[TextBlock(text=text)])
 
@@ -76,8 +77,11 @@ class TestCommandRegistry:
         """help_text 包含所有已注册命令。"""
         registry = CommandRegistry()
 
-        async def h1(_, __): return CommandResult()
-        async def h2(_, __): return CommandResult()
+        async def h1(_, __):
+            return CommandResult()
+
+        async def h2(_, __):
+            return CommandResult()
 
         registry.register(SlashCommand(name="alpha", description="第一个", handler=h1))
         registry.register(SlashCommand(name="beta", description="第二个", handler=h2))
@@ -92,7 +96,9 @@ class TestCommandRegistry:
         """list_commands 返回已注册的命令列表。"""
         registry = CommandRegistry()
 
-        async def h(_, __): return CommandResult()
+        async def h(_, __):
+            return CommandResult()
+
         registry.register(SlashCommand(name="cmd1", description="desc1", handler=h))
         registry.register(SlashCommand(name="cmd2", description="desc2", handler=h))
 
@@ -244,6 +250,7 @@ class TestRenderPluginCommandPrompt:
     def basic_command(self):
         """创建一个基本的命令定义 mock。"""
         from unittest.mock import MagicMock
+
         cmd = MagicMock()
         cmd.content = "请执行 ${ARGUMENTS}"
         cmd.is_skill = False

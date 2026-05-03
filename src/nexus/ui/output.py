@@ -37,9 +37,7 @@ class OutputRenderer:
             return
         if self._style_name == "minimal":
             return
-        self._spinner_status = self.console.status(
-            "[cyan]Thinking...[/cyan]", spinner="dots"
-        )
+        self._spinner_status = self.console.status("[cyan]Thinking...[/cyan]", spinner="dots")
         self._spinner_status.start()
 
     def start_assistant_turn(self) -> None:
@@ -132,7 +130,9 @@ class OutputRenderer:
                 self.console.print(f"    {output}")
                 return
             if is_error:
-                self.console.print(Panel(output, title=f"{tool_name} error", border_style="red", padding=(0, 1)))
+                self.console.print(
+                    Panel(output, title=f"{tool_name} error", border_style="red", padding=(0, 1))
+                )
                 return
             # Render tool output based on tool type
             tool_input = getattr(event, "tool_input", None) or self._last_tool_input
@@ -187,7 +187,9 @@ class OutputRenderer:
         if lower == "bash":
             cmd = (tool_input or {}).get("command", "")
             title = f"$ {cmd[:80]}" if cmd else "Bash"
-            self.console.print(Panel(output[:2000], title=title, border_style="dim", padding=(0, 1)))
+            self.console.print(
+                Panel(output[:2000], title=title, border_style="dim", padding=(0, 1))
+            )
             return
         # Read/FileRead: syntax highlight by file extension
         if lower in ("read", "fileread", "file_read"):
@@ -195,18 +197,28 @@ class OutputRenderer:
             ext = file_path.rsplit(".", 1)[-1] if "." in file_path else ""
             lexer = _ext_to_lexer(ext)
             if lexer and len(output) < 5000:
-                self.console.print(Syntax(output, lexer, theme="monokai", line_numbers=True, word_wrap=True))
+                self.console.print(
+                    Syntax(output, lexer, theme="monokai", line_numbers=True, word_wrap=True)
+                )
             else:
-                self.console.print(Panel(output[:2000], title=file_path, border_style="dim", padding=(0, 1)))
+                self.console.print(
+                    Panel(output[:2000], title=file_path, border_style="dim", padding=(0, 1))
+                )
             return
         # Edit/FileEdit: show as diff-style
         if lower in ("edit", "fileedit", "file_edit"):
             file_path = str((tool_input or {}).get("file_path", ""))
-            self.console.print(Panel(output[:2000], title=f"Edit: {file_path}", border_style="green", padding=(0, 1)))
+            self.console.print(
+                Panel(
+                    output[:2000], title=f"Edit: {file_path}", border_style="green", padding=(0, 1)
+                )
+            )
             return
         # Grep: highlight results
         if lower in ("grep", "greptool"):
-            self.console.print(Panel(output[:2000], title="Search results", border_style="cyan", padding=(0, 1)))
+            self.console.print(
+                Panel(output[:2000], title="Search results", border_style="cyan", padding=(0, 1))
+            )
             return
         # Default: dimmed text with truncation
         lines = output.split("\n")
@@ -248,12 +260,32 @@ def _summarize_tool_input(tool_name: str, tool_input: dict | None) -> str:
 
 def _ext_to_lexer(ext: str) -> str | None:
     mapping = {
-        "py": "python", "js": "javascript", "ts": "typescript", "tsx": "tsx",
-        "jsx": "jsx", "rs": "rust", "go": "go", "rb": "ruby", "java": "java",
-        "c": "c", "cpp": "cpp", "h": "c", "hpp": "cpp", "cs": "csharp",
-        "sh": "bash", "bash": "bash", "zsh": "bash", "json": "json",
-        "yaml": "yaml", "yml": "yaml", "toml": "toml", "xml": "xml",
-        "html": "html", "css": "css", "sql": "sql", "md": "markdown",
+        "py": "python",
+        "js": "javascript",
+        "ts": "typescript",
+        "tsx": "tsx",
+        "jsx": "jsx",
+        "rs": "rust",
+        "go": "go",
+        "rb": "ruby",
+        "java": "java",
+        "c": "c",
+        "cpp": "cpp",
+        "h": "c",
+        "hpp": "cpp",
+        "cs": "csharp",
+        "sh": "bash",
+        "bash": "bash",
+        "zsh": "bash",
+        "json": "json",
+        "yaml": "yaml",
+        "yml": "yaml",
+        "toml": "toml",
+        "xml": "xml",
+        "html": "html",
+        "css": "css",
+        "sql": "sql",
+        "md": "markdown",
         "txt": None,
     }
     return mapping.get(ext.lower())

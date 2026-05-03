@@ -44,7 +44,7 @@ def estimate_message_tokens(messages: list[ConversationMessage]) -> int:
                 total += estimate_tokens(block.text)
             elif isinstance(block, ToolResultBlock):
                 total += estimate_tokens(block.content)
-            elif hasattr(block, 'name') and hasattr(block, 'input'):
+            elif hasattr(block, "name") and hasattr(block, "input"):
                 total += estimate_tokens(block.name)
                 total += estimate_tokens(str(block.input))
     return int(total * TOKEN_ESTIMATION_PADDING)
@@ -315,7 +315,9 @@ def _summarize_message_for_memory(message: ConversationMessage) -> str:
     return f"{message.role}: [non-text content]"
 
 
-def _build_session_memory_message(messages: list[ConversationMessage]) -> ConversationMessage | None:
+def _build_session_memory_message(
+    messages: list[ConversationMessage],
+) -> ConversationMessage | None:
     """将会话历史压缩为轻量级会话记忆消息。"""
     lines: list[str] = []
     total_chars = 0
@@ -324,7 +326,9 @@ def _build_session_memory_message(messages: list[ConversationMessage]) -> Conver
         if not line:
             continue
         projected = total_chars + len(line) + 1
-        if lines and (len(lines) >= SESSION_MEMORY_MAX_LINES or projected >= SESSION_MEMORY_MAX_CHARS):
+        if lines and (
+            len(lines) >= SESSION_MEMORY_MAX_LINES or projected >= SESSION_MEMORY_MAX_CHARS
+        ):
             lines.append("... earlier context condensed ...")
             break
         lines.append(line)
@@ -351,9 +355,8 @@ def try_session_memory_compaction(
     if summary_message is None:
         return None
     result = [summary_message, *newer]
-    if (
-        estimate_message_tokens(result) >= estimate_message_tokens(messages)
-        and len(result) >= len(messages)
+    if estimate_message_tokens(result) >= estimate_message_tokens(messages) and len(result) >= len(
+        messages
     ):
         return None
     return result

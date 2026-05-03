@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 def _get_memory_store():
     """获取当前工作区的 MemoryStore 实例."""
     from personal_agent.workspace import get_workspace_root
+
     workspace = get_workspace_root()
     return MemoryStore(workspace)
 
@@ -19,6 +20,7 @@ def _get_memory_store():
 def _entry_to_dict(entry) -> dict:
     """将 MemoryEntry 转为可 JSON 序列化的字典."""
     from nexus.memory.types import utc_now
+
     return {
         "id": entry.id,
         "name": entry.name,
@@ -109,10 +111,17 @@ def register_routes(app):
             memory_type = MemoryType(data.get("memory_type")) if data.get("memory_type") else None
             status = RecordStatus(data.get("status")) if data.get("status") else None
             success = store.update(
-                memory_id, name=data.get("name"), summary=data.get("summary"),
-                body=data.get("body"), memory_type=memory_type, tags=data.get("tags"),
-                confidence=data.get("confidence"), priority=data.get("priority"),
-                status=status, ttl_days=data.get("ttl_days"), metadata=data.get("metadata"),
+                memory_id,
+                name=data.get("name"),
+                summary=data.get("summary"),
+                body=data.get("body"),
+                memory_type=memory_type,
+                tags=data.get("tags"),
+                confidence=data.get("confidence"),
+                priority=data.get("priority"),
+                status=status,
+                ttl_days=data.get("ttl_days"),
+                metadata=data.get("metadata"),
             )
             if not success:
                 return jsonify({"error": "Memory not found"}), 404
@@ -139,6 +148,7 @@ def register_routes(app):
             store = _get_memory_store()
             data = request.get_json() or {}
             from nexus.memory.types import MemoryQuery
+
             query = MemoryQuery(
                 text=data.get("text", ""),
                 limit=int(data.get("limit", 8)),
@@ -149,24 +159,35 @@ def register_routes(app):
                 memory_types=set(data.get("memory_types", [])),
             )
             result = store.recall(query)
-            return jsonify({
-                "entries": [_entry_to_dict(e) for e in result.entries],
-                "contents": {k: _content_to_dict(c) for k, c in result.contents.items()},
-                "candidates_scanned": result.candidates_scanned,
-                "used_tokens": result.used_tokens,
-                "score_breakdown": [
-                    {"memory_id": sb.memory_id, "lexical_score": sb.lexical_score,
-                     "recency_score": sb.recency_score, "priority_score": sb.priority_score,
-                     "graph_score": sb.graph_score, "final_score": sb.final_score,
-                     "selected": sb.selected}
-                    for sb in result.score_breakdown
-                ],
-                "dropped_candidates": [
-                    {"memory_id": d.memory_id, "reason": d.reason,
-                     "final_score": d.final_score, "token_cost": d.token_cost}
-                    for d in result.dropped_candidates
-                ],
-            })
+            return jsonify(
+                {
+                    "entries": [_entry_to_dict(e) for e in result.entries],
+                    "contents": {k: _content_to_dict(c) for k, c in result.contents.items()},
+                    "candidates_scanned": result.candidates_scanned,
+                    "used_tokens": result.used_tokens,
+                    "score_breakdown": [
+                        {
+                            "memory_id": sb.memory_id,
+                            "lexical_score": sb.lexical_score,
+                            "recency_score": sb.recency_score,
+                            "priority_score": sb.priority_score,
+                            "graph_score": sb.graph_score,
+                            "final_score": sb.final_score,
+                            "selected": sb.selected,
+                        }
+                        for sb in result.score_breakdown
+                    ],
+                    "dropped_candidates": [
+                        {
+                            "memory_id": d.memory_id,
+                            "reason": d.reason,
+                            "final_score": d.final_score,
+                            "token_cost": d.token_cost,
+                        }
+                        for d in result.dropped_candidates
+                    ],
+                }
+            )
         except Exception as e:
             log.error(f"Error querying memories: {e}")
             return jsonify({"error": str(e)}), 500
@@ -185,9 +206,13 @@ def register_routes(app):
                 store.delete(memory_id)
                 return jsonify({"status": "deleted"})
             elif action == "reject":
-                store.update(memory_id, metadata={"feedback_rejected": True, "feedback_reason": reason})
+                store.update(
+                    memory_id, metadata={"feedback_rejected": True, "feedback_reason": reason}
+                )
             elif action == "confirm":
-                store.update(memory_id, metadata={"feedback_confirmed": True, "feedback_reason": reason})
+                store.update(
+                    memory_id, metadata={"feedback_confirmed": True, "feedback_reason": reason}
+                )
             entry, _ = store.get(memory_id)
             return jsonify({"entry": _entry_to_dict(entry)})
         except Exception as e:
@@ -198,6 +223,7 @@ def register_routes(app):
     def consolidate_memories():
         try:
             from nexus.memory.lifecycle import consolidate_entries, ConsolidationPolicy
+
             store = _get_memory_store()
             data = request.get_json() or {}
             policy = ConsolidationPolicy(
@@ -210,10 +236,13 @@ def register_routes(app):
             touched = consolidate_entries(entries, policy=policy)
             for entry in touched:
                 store._index.upsert(entry)
-            return jsonify({
-                "status": "consolidated", "touched_count": len(touched),
-                "entries": [_entry_to_dict(e) for e in touched],
-            })
+            return jsonify(
+                {
+                    "status": "consolidated",
+                    "touched_count": len(touched),
+                    "entries": [_entry_to_dict(e) for e in touched],
+                }
+            )
         except Exception as e:
             log.error(f"Error consolidating memories: {e}")
             return jsonify({"error": str(e)}), 500
@@ -222,11 +251,14 @@ def register_routes(app):
     def suggest_memory_archives():
         try:
             from nexus.memory.lifecycle import suggest_archives
+
             store = _get_memory_store()
             max_age_days = int(request.args.get("max_age_days", 90))
             max_entries = int(request.args.get("max_entries", 100))
             entries = list(store._index.list())
-            suggested = suggest_archives(entries, max_age_days=max_age_days, max_entries=max_entries)
+            suggested = suggest_archives(
+                entries, max_age_days=max_age_days, max_entries=max_entries
+            )
             return jsonify({"suggested_ids": suggested, "count": len(suggested)})
         except Exception as e:
             log.error(f"Error suggesting archives: {e}")
@@ -241,13 +273,18 @@ def register_routes(app):
                 "total": len(entries),
                 "by_status": {"active": 0, "superseded": 0, "archived": 0},
                 "by_type": {"fact": 0, "episode": 0, "preference": 0, "procedure": 0},
-                "avg_confidence": 0.0, "avg_priority": 0.0,
+                "avg_confidence": 0.0,
+                "avg_priority": 0.0,
             }
             total_confidence = 0.0
             total_priority = 0.0
             for entry in entries:
-                stats["by_status"][entry.status.value] = stats["by_status"].get(entry.status.value, 0) + 1
-                stats["by_type"][entry.memory_type.value] = stats["by_type"].get(entry.memory_type.value, 0) + 1
+                stats["by_status"][entry.status.value] = (
+                    stats["by_status"].get(entry.status.value, 0) + 1
+                )
+                stats["by_type"][entry.memory_type.value] = (
+                    stats["by_type"].get(entry.memory_type.value, 0) + 1
+                )
                 total_confidence += entry.confidence
                 total_priority += entry.priority
             if entries:

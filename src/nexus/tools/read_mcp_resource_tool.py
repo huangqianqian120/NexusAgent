@@ -29,7 +29,9 @@ class ReadMcpResourceTool(BaseTool):
         del arguments
         return True
 
-    async def execute(self, arguments: ReadMcpResourceToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: ReadMcpResourceToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         del context
         try:
             output = await self._manager.read_resource(arguments.server, arguments.uri)

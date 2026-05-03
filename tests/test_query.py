@@ -33,29 +33,35 @@ from nexus.engine.query import (
 class TestIsPromptTooLongError:
     """测试 prompt too long 错误检测。"""
 
-    @pytest.mark.parametrize("message", [
-        "prompt too long",
-        "context length exceeded",
-        "maximum context reached",
-        "context window full",
-        "too many tokens",
-        "too large for the model",
-        "exceeds maximum context length",
-        "PROMPT TOO LONG",
-        "Error: Prompt Too Long for model",
-    ])
+    @pytest.mark.parametrize(
+        "message",
+        [
+            "prompt too long",
+            "context length exceeded",
+            "maximum context reached",
+            "context window full",
+            "too many tokens",
+            "too large for the model",
+            "exceeds maximum context length",
+            "PROMPT TOO LONG",
+            "Error: Prompt Too Long for model",
+        ],
+    )
     def test_detects_prompt_too_long(self, message):
         """检测各种 prompt too long 错误消息。"""
         assert _is_prompt_too_long_error(Exception(message)) is True
 
-    @pytest.mark.parametrize("message", [
-        "connection timeout",
-        "invalid api key",
-        "internal server error",
-        "rate limit exceeded",
-        "",
-        "model not found",
-    ])
+    @pytest.mark.parametrize(
+        "message",
+        [
+            "connection timeout",
+            "invalid api key",
+            "internal server error",
+            "rate limit exceeded",
+            "",
+            "model not found",
+        ],
+    )
     def test_rejects_other_errors(self, message):
         """其他错误消息返回 False。"""
         assert _is_prompt_too_long_error(Exception(message)) is False
@@ -539,17 +545,13 @@ class TestResolvePermissionFilePath:
     def test_from_raw_input_file_path(self):
         """从 raw_input 的 file_path 键提取。"""
         cwd = Path("/tmp")
-        result = _resolve_permission_file_path(
-            cwd, {"file_path": "/etc/hosts"}, None
-        )
+        result = _resolve_permission_file_path(cwd, {"file_path": "/etc/hosts"}, None)
         assert result == str(Path("/etc/hosts").resolve())
 
     def test_from_raw_input_path(self):
         """从 raw_input 的 path 键提取。"""
         cwd = Path("/tmp")
-        result = _resolve_permission_file_path(
-            cwd, {"path": "/var/log/syslog"}, None
-        )
+        result = _resolve_permission_file_path(cwd, {"path": "/var/log/syslog"}, None)
         assert result == str(Path("/var/log/syslog").resolve())
 
     def test_file_path_priority_over_path(self):
@@ -563,9 +565,7 @@ class TestResolvePermissionFilePath:
     def test_relative_path_resolved(self):
         """相对路径相对于 cwd 解析。"""
         cwd = Path("/home/user")
-        result = _resolve_permission_file_path(
-            cwd, {"path": "config.json"}, None
-        )
+        result = _resolve_permission_file_path(cwd, {"path": "config.json"}, None)
         exp = str((cwd / "config.json").resolve())
         assert result == exp
 
@@ -624,9 +624,7 @@ class TestExtractPermissionCommand:
 
     def test_from_raw_input(self):
         """从 raw_input 提取命令。"""
-        result = _extract_permission_command(
-            {"command": "git status"}, None
-        )
+        result = _extract_permission_command({"command": "git status"}, None)
         assert result == "git status"
 
     def test_from_parsed_input(self):
@@ -640,9 +638,7 @@ class TestExtractPermissionCommand:
         """raw_input 优先于 parsed_input。"""
         parsed = MagicMock()
         parsed.command = "parsed command"
-        result = _extract_permission_command(
-            {"command": "raw command"}, parsed
-        )
+        result = _extract_permission_command({"command": "raw command"}, parsed)
         assert result == "raw command"
 
     def test_returns_none_when_not_found(self):

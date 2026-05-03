@@ -20,7 +20,9 @@ class EnterPlanModeTool(BaseTool):
     description = "Switch permission mode to plan."
     input_model = EnterPlanModeToolInput
 
-    async def execute(self, arguments: EnterPlanModeToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: EnterPlanModeToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         del arguments, context
         settings = load_settings()
         settings.permission.mode = PermissionMode.PLAN

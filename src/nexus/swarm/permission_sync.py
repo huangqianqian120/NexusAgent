@@ -199,9 +199,7 @@ class SwarmPermissionRequest:
             resolved_at=data.get("resolved_at", data.get("resolvedAt")),
             feedback=data.get("feedback"),
             updated_input=data.get("updated_input", data.get("updatedInput")),
-            permission_updates=data.get(
-                "permission_updates", data.get("permissionUpdates")
-            ),
+            permission_updates=data.get("permission_updates", data.get("permissionUpdates")),
             created_at=data.get("created_at", data.get("createdAt", time.time())),
         )
 
@@ -531,9 +529,7 @@ def _sync_resolve_permission(
             created_at=request.created_at,
         )
 
-        tmp_path.write_text(
-            json.dumps(resolved_request.to_dict(), indent=2), encoding="utf-8"
-        )
+        tmp_path.write_text(json.dumps(resolved_request.to_dict(), indent=2), encoding="utf-8")
         os.replace(tmp_path, resolved_path)
         try:
             pending_path.unlink()
@@ -564,9 +560,7 @@ async def resolve_permission(
     if not team:
         return False
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        None, _sync_resolve_permission, request_id, resolution, team
-    )
+    return await loop.run_in_executor(None, _sync_resolve_permission, request_id, resolution, team)
 
 
 def _sync_cleanup_old_resolutions(team: str, max_age_seconds: float) -> int:
@@ -613,9 +607,7 @@ async def cleanup_old_resolutions(
     if not team:
         return 0
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        None, _sync_cleanup_old_resolutions, team, max_age_seconds
-    )
+    return await loop.run_in_executor(None, _sync_cleanup_old_resolutions, team, max_age_seconds)
 
 
 async def delete_resolved_permission(
@@ -677,9 +669,7 @@ async def poll_for_response(
     return PermissionResponse(
         request_id=resolved.id,
         decision="approved" if resolved.status == "approved" else "denied",
-        timestamp=datetime.fromtimestamp(ts, tz=timezone.utc).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f"
-        )[:-3]
+        timestamp=datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
         + "Z",
         feedback=resolved.feedback,
         updated_input=resolved.updated_input,
@@ -801,9 +791,7 @@ async def send_permission_request_via_mailbox(
             {
                 "from": request.worker_name,
                 "text": json.dumps(msg.payload),
-                "timestamp": time.strftime(
-                    "%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()
-                ),
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
                 "color": request.worker_color,
             },
             request.team_name,
@@ -857,9 +845,7 @@ async def send_permission_response_via_mailbox(
             {
                 "from": sender_name,
                 "text": json.dumps(msg.payload),
-                "timestamp": time.strftime(
-                    "%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()
-                ),
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
             },
             team,
         )
@@ -923,9 +909,7 @@ async def send_sandbox_permission_request_via_mailbox(
             {
                 "from": worker_name,
                 "text": json.dumps(msg.payload),
-                "timestamp": time.strftime(
-                    "%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()
-                ),
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
                 "color": worker_color,
             },
             team,
@@ -978,9 +962,7 @@ async def send_sandbox_permission_response_via_mailbox(
             {
                 "from": sender_name,
                 "text": json.dumps(msg.payload),
-                "timestamp": time.strftime(
-                    "%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()
-                ),
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
             },
             team,
         )

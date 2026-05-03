@@ -73,6 +73,7 @@ def _lexical_score(query_tokens: set[str], text: str) -> float:
 def _tokenize(text: str) -> set[str]:
     """Tokenize text into searchable tokens."""
     import re
+
     ascii_tokens = {t for t in re.findall(r"[A-Za-z0-9_]+", text.lower()) if len(t) >= 2}
     han_chars = set(re.findall(r"[\u4e00-\u9fff\u3400-\u4dbf]", text))
     return ascii_tokens | han_chars
@@ -280,8 +281,10 @@ class MemoryStore:
 
     def __init__(self, cwd: str | Path | None = None) -> None:
         from nexus.memory.paths import get_project_memory_dir
+
         if cwd is None:
             from pathlib import Path
+
             cwd = Path.cwd()
         memory_dir = get_project_memory_dir(cwd)
         index_path = get_memory_entrypoint(cwd)
@@ -415,26 +418,32 @@ class MemoryStore:
             selected = False
 
             if len(result_entries) >= query.limit:
-                dropped.append(DroppedCandidate(
-                    memory_id=memory_id,
-                    reason="limit_reached",
-                    final_score=base_score,
-                    token_cost=token_cost,
-                ))
+                dropped.append(
+                    DroppedCandidate(
+                        memory_id=memory_id,
+                        reason="limit_reached",
+                        final_score=base_score,
+                        token_cost=token_cost,
+                    )
+                )
             elif memory_id in seen:
-                dropped.append(DroppedCandidate(
-                    memory_id=memory_id,
-                    reason="duplicate",
-                    final_score=base_score,
-                    token_cost=token_cost,
-                ))
+                dropped.append(
+                    DroppedCandidate(
+                        memory_id=memory_id,
+                        reason="duplicate",
+                        final_score=base_score,
+                        token_cost=token_cost,
+                    )
+                )
             elif used_tokens + token_cost > query.budget_tokens:
-                dropped.append(DroppedCandidate(
-                    memory_id=memory_id,
-                    reason="budget_exceeded",
-                    final_score=base_score,
-                    token_cost=token_cost,
-                ))
+                dropped.append(
+                    DroppedCandidate(
+                        memory_id=memory_id,
+                        reason="budget_exceeded",
+                        final_score=base_score,
+                        token_cost=token_cost,
+                    )
+                )
             else:
                 result_entries.append(entry)
                 if content:
@@ -449,15 +458,17 @@ class MemoryStore:
             priority = _priority_score(entry)
             graph = _graph_score(entry)
 
-            score_breakdown.append(RecallScoreBreakdown(
-                memory_id=memory_id,
-                lexical_score=lexical,
-                recency_score=recency,
-                priority_score=priority,
-                graph_score=graph,
-                final_score=base_score,
-                selected=selected,
-            ))
+            score_breakdown.append(
+                RecallScoreBreakdown(
+                    memory_id=memory_id,
+                    lexical_score=lexical,
+                    recency_score=recency,
+                    priority_score=priority,
+                    graph_score=graph,
+                    final_score=base_score,
+                    selected=selected,
+                )
+            )
 
         # Expand relations if needed
         if query.relation_hops > 0:
@@ -500,12 +511,14 @@ class MemoryStore:
                 )
 
                 if used_tokens + token_cost > query.budget_tokens:
-                    dropped.append(DroppedCandidate(
-                        memory_id=target_id,
-                        reason="budget_exceeded",
-                        final_score=entry.priority / 100.0 * relation.weight,
-                        token_cost=token_cost,
-                    ))
+                    dropped.append(
+                        DroppedCandidate(
+                            memory_id=target_id,
+                            reason="budget_exceeded",
+                            final_score=entry.priority / 100.0 * relation.weight,
+                            token_cost=token_cost,
+                        )
+                    )
                     return used_tokens
 
                 entries.append(target)

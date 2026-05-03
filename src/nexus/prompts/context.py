@@ -35,7 +35,7 @@ def _build_skills_section(
         "# Available Skills",
         "",
         "The following skills are available via the `skill` tool. "
-        "When a user's request matches a skill, invoke it with `skill(name=\"<skill_name>\")` "
+        'When a user\'s request matches a skill, invoke it with `skill(name="<skill_name>")` '
         "to load detailed instructions before proceeding.",
         "",
     ]

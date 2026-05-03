@@ -26,11 +26,15 @@ class ListMcpResourcesTool(BaseTool):
         del arguments
         return True
 
-    async def execute(self, arguments: ListMcpResourcesToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: ListMcpResourcesToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         del arguments, context
         resources = self._manager.list_resources()
         if not resources:
             return ToolResult(output="(no MCP resources)")
         return ToolResult(
-            output="\n".join(f"{item.server_name}:{item.uri} {item.description}".strip() for item in resources)
+            output="\n".join(
+                f"{item.server_name}:{item.uri} {item.description}".strip() for item in resources
+            )
         )

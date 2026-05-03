@@ -293,12 +293,15 @@ async def run_query(
                     yield AssistantTextDelta(text=event.text), None
                     continue
                 if isinstance(event, ApiRetryEvent):
-                    yield StatusEvent(
-                        message=(
-                            f"Request failed; retrying in {event.delay_seconds:.1f}s "
-                            f"(attempt {event.attempt + 1} of {event.max_attempts}): {event.message}"
-                        )
-                    ), None
+                    yield (
+                        StatusEvent(
+                            message=(
+                                f"Request failed; retrying in {event.delay_seconds:.1f}s "
+                                f"(attempt {event.attempt + 1} of {event.max_attempts}): {event.message}"
+                            )
+                        ),
+                        None,
+                    )
                     continue
 
                 if isinstance(event, ApiMessageCompleteEvent):
@@ -314,8 +317,17 @@ async def run_query(
                 messages, was_compacted = last_compaction_result
                 if was_compacted:
                     continue
-            if "connect" in error_msg.lower() or "timeout" in error_msg.lower() or "network" in error_msg.lower():
-                yield ErrorEvent(message=f"Network error: {error_msg}. Check your internet connection and try again."), None
+            if (
+                "connect" in error_msg.lower()
+                or "timeout" in error_msg.lower()
+                or "network" in error_msg.lower()
+            ):
+                yield (
+                    ErrorEvent(
+                        message=f"Network error: {error_msg}. Check your internet connection and try again."
+                    ),
+                    None,
+                )
             else:
                 yield ErrorEvent(message=f"API error: {error_msg}"), None
             return
@@ -336,11 +348,14 @@ async def run_query(
             tc = tool_calls[0]
             yield ToolExecutionStarted(tool_name=tc.name, tool_input=tc.input), None
             result = await _execute_tool_call(context, tc.name, tc.id, tc.input)
-            yield ToolExecutionCompleted(
-                tool_name=tc.name,
-                output=result.content,
-                is_error=result.is_error,
-            ), None
+            yield (
+                ToolExecutionCompleted(
+                    tool_name=tc.name,
+                    output=result.content,
+                    is_error=result.is_error,
+                ),
+                None,
+            )
             tool_results = [result]
         else:
             # Multiple tools: execute concurrently, emit events after
@@ -354,11 +369,14 @@ async def run_query(
             tool_results = list(results)
 
             for tc, result in zip(tool_calls, tool_results):
-                yield ToolExecutionCompleted(
-                    tool_name=tc.name,
-                    output=result.content,
-                    is_error=result.is_error,
-                ), None
+                yield (
+                    ToolExecutionCompleted(
+                        tool_name=tc.name,
+                        output=result.content,
+                        is_error=result.is_error,
+                    ),
+                    None,
+                )
 
         messages.append(ConversationMessage(role="user", content=tool_results))
 
@@ -376,7 +394,11 @@ async def _execute_tool_call(
     if context.hook_executor is not None:
         pre_hooks = await context.hook_executor.execute(
             HookEvent.PRE_TOOL_USE,
-            {"tool_name": tool_name, "tool_input": tool_input, "event": HookEvent.PRE_TOOL_USE.value},
+            {
+                "tool_name": tool_name,
+                "tool_input": tool_input,
+                "event": HookEvent.PRE_TOOL_USE.value,
+            },
         )
         if pre_hooks.blocked:
             return ToolResultBlock(
@@ -410,8 +432,13 @@ async def _execute_tool_call(
     # consistently across built-in tools that use either `file_path` or `path`.
     _file_path = _resolve_permission_file_path(context.cwd, tool_input, parsed_input)
     _command = _extract_permission_command(tool_input, parsed_input)
-    log.debug("permission check: %s read_only=%s path=%s cmd=%s",
-              tool_name, tool.is_read_only(parsed_input), _file_path, _command and _command[:80])
+    log.debug(
+        "permission check: %s read_only=%s path=%s cmd=%s",
+        tool_name,
+        tool.is_read_only(parsed_input),
+        _file_path,
+        _command and _command[:80],
+    )
     decision = context.permission_checker.evaluate(
         tool_name,
         is_read_only=tool.is_read_only(parsed_input),
@@ -451,8 +478,13 @@ async def _execute_tool_call(
         ),
     )
     elapsed = time.monotonic() - t0
-    log.debug("executed %s in %.2fs err=%s output_len=%d",
-              tool_name, elapsed, result.is_error, len(result.output or ""))
+    log.debug(
+        "executed %s in %.2fs err=%s output_len=%d",
+        tool_name,
+        elapsed,
+        result.is_error,
+        len(result.output or ""),
+    )
     tool_result = ToolResultBlock(
         tool_use_id=tool_use_id,
         content=result.output,

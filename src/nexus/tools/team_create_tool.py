@@ -22,7 +22,9 @@ class TeamCreateTool(BaseTool):
     description = "Create a lightweight in-memory team for agent tasks."
     input_model = TeamCreateToolInput
 
-    async def execute(self, arguments: TeamCreateToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: TeamCreateToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         del context
         try:
             team = get_team_registry().create_team(arguments.name, arguments.description)

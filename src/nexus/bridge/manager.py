@@ -105,7 +105,7 @@ class BridgeSessionManager:
         if len(self._sessions) <= self.MAX_SESSIONS:
             return
         sessions = self.list_sessions()
-        completed = [s for s in sessions if s.status in ('completed', 'failed')]
+        completed = [s for s in sessions if s.status in ("completed", "failed")]
         excess = len(self._sessions) - self.MAX_SESSIONS
         for session in completed[-excess:]:
             self._sessions.pop(session.session_id, None)
@@ -122,4 +122,3 @@ def get_bridge_manager() -> BridgeSessionManager:
     if _DEFAULT_MANAGER is None:
         _DEFAULT_MANAGER = BridgeSessionManager()
     return _DEFAULT_MANAGER
-

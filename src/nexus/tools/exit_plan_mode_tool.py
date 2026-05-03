@@ -20,7 +20,9 @@ class ExitPlanModeTool(BaseTool):
     description = "Switch permission mode back to default."
     input_model = ExitPlanModeToolInput
 
-    async def execute(self, arguments: ExitPlanModeToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: ExitPlanModeToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         del arguments, context
         settings = load_settings()
         settings.permission.mode = PermissionMode.DEFAULT

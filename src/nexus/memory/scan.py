@@ -55,7 +55,7 @@ def _parse_memory_file(path: Path, content: str) -> MemoryHeader:
     # Fallback: first non-empty, non-frontmatter line as description
     desc_line_idx: int | None = None
     if not description:
-        for idx, line in enumerate(lines[body_start:body_start + 10], body_start):
+        for idx, line in enumerate(lines[body_start : body_start + 10], body_start):
             stripped = line.strip()
             if stripped and stripped != "---" and not stripped.startswith("#"):
                 description = stripped[:200]
@@ -67,9 +67,7 @@ def _parse_memory_file(path: Path, content: str) -> MemoryHeader:
     body_lines = [
         line.strip()
         for idx, line in enumerate(lines[body_start:], body_start)
-        if line.strip()
-        and not line.strip().startswith("#")
-        and idx != desc_line_idx
+        if line.strip() and not line.strip().startswith("#") and idx != desc_line_idx
     ]
     body_preview = " ".join(body_lines)[:300]
 

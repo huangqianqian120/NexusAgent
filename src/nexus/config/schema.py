@@ -105,4 +105,3 @@ class ChannelConfigs(_CompatModel):
 class Config(_CompatModel):
     channels: ChannelConfigs = Field(default_factory=ChannelConfigs)
     providers: ProviderConfigs = Field(default_factory=ProviderConfigs)
-

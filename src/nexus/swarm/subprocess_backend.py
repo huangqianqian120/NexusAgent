@@ -62,7 +62,11 @@ class SubprocessBackend:
         env_prefix = " ".join(f"{k}={v!r}" for k, v in extra_env.items())
 
         teammate_cmd = get_teammate_command()
-        if teammate_cmd.endswith("python") or teammate_cmd.endswith("python3") or "/python" in teammate_cmd:
+        if (
+            teammate_cmd.endswith("python")
+            or teammate_cmd.endswith("python3")
+            or "/python" in teammate_cmd
+        ):
             cmd_parts = [teammate_cmd, "-m", "nexus"] + flags
         else:
             cmd_parts = [teammate_cmd] + flags

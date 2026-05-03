@@ -136,14 +136,10 @@ class TeammateContext:
     plan_mode_required: bool = False
     """Whether this agent must enter plan mode before making changes."""
 
-    abort_controller: TeammateAbortController = field(
-        default_factory=TeammateAbortController
-    )
+    abort_controller: TeammateAbortController = field(default_factory=TeammateAbortController)
     """Dual-signal abort controller (graceful cancel + force kill)."""
 
-    message_queue: asyncio.Queue[TeammateMessage] = field(
-        default_factory=asyncio.Queue
-    )
+    message_queue: asyncio.Queue[TeammateMessage] = field(default_factory=asyncio.Queue)
     """Queue of pending messages delivered between turns.
 
     The execution loop drains this between query iterations so messages from
@@ -320,7 +316,11 @@ async def _drain_mailbox(
         elif msg.type == "user_message":
             # Enqueue the message so the query loop can inject it as a new turn.
             logger.debug("[in_process] %s: queuing user_message from mailbox", ctx.agent_id)
-            content = msg.payload.get("content", "") if isinstance(msg.payload, dict) else str(msg.payload)
+            content = (
+                msg.payload.get("content", "")
+                if isinstance(msg.payload, dict)
+                else str(msg.payload)
+            )
             teammate_msg = TeammateMessage(
                 text=content,
                 from_agent=msg.sender,
@@ -350,9 +350,7 @@ async def _run_query_loop(
     from nexus.engine.query import run_query
     from nexus.engine.messages import ConversationMessage
 
-    messages: list[ConversationMessage] = [
-        ConversationMessage.from_user_text(config.prompt)
-    ]
+    messages: list[ConversationMessage] = [ConversationMessage.from_user_text(config.prompt)]
 
     async for event, usage in run_query(query_context, messages):
         # Track token usage if usage info is provided
@@ -446,9 +444,7 @@ class InProcessBackend:
         if agent_id in self._active:
             entry = self._active[agent_id]
             if not entry.task.done():
-                logger.warning(
-                    "[InProcessBackend] spawn(): %s is already running", agent_id
-                )
+                logger.warning("[InProcessBackend] spawn(): %s is already running", agent_id)
                 return SpawnResult(
                     task_id=task_id,
                     agent_id=agent_id,
@@ -504,9 +500,7 @@ class InProcessBackend:
         round-trip.
         """
         if "@" not in agent_id:
-            raise ValueError(
-                f"Invalid agent_id {agent_id!r}: expected 'agentName@teamName'"
-            )
+            raise ValueError(f"Invalid agent_id {agent_id!r}: expected 'agentName@teamName'")
         agent_name, team_name = agent_id.split("@", 1)
 
         from nexus.swarm.mailbox import MailboxMessage
@@ -526,9 +520,7 @@ class InProcessBackend:
         await mailbox.write(msg)
         logger.debug("[InProcessBackend] sent message to %s", agent_id)
 
-    async def shutdown(
-        self, agent_id: str, *, force: bool = False, timeout: float = 10.0
-    ) -> bool:
+    async def shutdown(self, agent_id: str, *, force: bool = False, timeout: float = 10.0) -> bool:
         """Terminate a running in-process teammate.
 
         Parameters
@@ -549,9 +541,7 @@ class InProcessBackend:
         """
         entry = self._active.get(agent_id)
         if entry is None:
-            logger.debug(
-                "[InProcessBackend] shutdown(): %s not found in active tasks", agent_id
-            )
+            logger.debug("[InProcessBackend] shutdown(): %s not found in active tasks", agent_id)
             return False
 
         if entry.task.done():
@@ -605,9 +595,7 @@ class InProcessBackend:
         if not entry.abort_controller.is_cancelled:
             entry.abort_controller.request_cancel(reason="cleanup")
 
-        logger.debug(
-            "[InProcessBackend] _cleanup_teammate: %s removed from registry", agent_id
-        )
+        logger.debug("[InProcessBackend] _cleanup_teammate: %s removed from registry", agent_id)
 
     def _on_teammate_error(self, agent_id: str, error: Exception) -> None:
         """Handle an unhandled exception from a teammate Task.
@@ -622,8 +610,7 @@ class InProcessBackend:
             self._active.pop(agent_id, None)
 
         logger.error(
-            "[InProcessBackend] Teammate %s raised an unhandled exception "
-            "(duration=%.1fs): %s: %s",
+            "[InProcessBackend] Teammate %s raised an unhandled exception (duration=%.1fs): %s: %s",
             agent_id,
             duration,
             type(error).__name__,

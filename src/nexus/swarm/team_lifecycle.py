@@ -235,14 +235,8 @@ class TeamFile:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TeamFile":
-        members = {
-            k: TeamMember.from_dict(v)
-            for k, v in data.get("members", {}).items()
-        }
-        team_allowed_paths = [
-            AllowedPath.from_dict(p)
-            for p in data.get("team_allowed_paths", [])
-        ]
+        members = {k: TeamMember.from_dict(v) for k, v in data.get("members", {}).items()}
+        team_allowed_paths = [AllowedPath.from_dict(p) for p in data.get("team_allowed_paths", [])]
         return cls(
             name=data["name"],
             description=data.get("description", ""),
@@ -425,11 +419,7 @@ def remove_member_from_team(team_name: str, tmux_pane_id: str) -> bool:
     if not team_file:
         return False
 
-    to_remove = [
-        k
-        for k, m in team_file.members.items()
-        if m.tmux_pane_id == tmux_pane_id
-    ]
+    to_remove = [k for k, m in team_file.members.items() if m.tmux_pane_id == tmux_pane_id]
     if not to_remove:
         return False
 
@@ -492,9 +482,7 @@ def set_member_mode(
     if not team_file:
         return False
 
-    member = next(
-        (m for m in team_file.members.values() if m.name == member_name), None
-    )
+    member = next((m for m in team_file.members.values() if m.name == member_name), None)
     if not member:
         return False
 
@@ -583,9 +571,7 @@ async def set_member_active(
     if not team_file:
         return
 
-    member = next(
-        (m for m in team_file.members.values() if m.name == member_name), None
-    )
+    member = next((m for m in team_file.members.values() if m.name == member_name), None)
     if not member:
         return
 
@@ -877,9 +863,7 @@ class TeamLifecycleManager:
         path = _team_file_path(team_name)
         team = self._require_team(team_name, path)
         if agent_id not in team.members:
-            raise ValueError(
-                f"Agent '{agent_id}' is not a member of team '{team_name}'"
-            )
+            raise ValueError(f"Agent '{agent_id}' is not a member of team '{team_name}'")
         del team.members[agent_id]
         team.save(path)
         return team
@@ -888,15 +872,11 @@ class TeamLifecycleManager:
     # Mode helpers (proxy to standalone functions)
     # ------------------------------------------------------------------
 
-    def set_member_mode(
-        self, team_name: str, member_name: str, mode: str
-    ) -> bool:
+    def set_member_mode(self, team_name: str, member_name: str, mode: str) -> bool:
         """Set a team member's permission mode."""
         return set_member_mode(team_name, member_name, mode)
 
-    async def set_member_active(
-        self, team_name: str, member_name: str, is_active: bool
-    ) -> None:
+    async def set_member_active(self, team_name: str, member_name: str, is_active: bool) -> None:
         """Set a team member's active status."""
         await set_member_active(team_name, member_name, is_active)
 

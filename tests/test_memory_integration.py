@@ -1,6 +1,5 @@
 """MemoryStore (index + content) 集成测试."""
 
-
 import pytest
 
 from nexus.memory.store import MemoryStore, FileIndexStore, FileContentStore
@@ -59,11 +58,15 @@ class TestMemoryStore:
 
     def test_list_filter_by_type(self, store):
         store.create(
-            name="事实记忆", summary="摘要", body="正文",
+            name="事实记忆",
+            summary="摘要",
+            body="正文",
             memory_type=MemoryType.FACT,
         )
         store.create(
-            name="过程记忆", summary="摘要", body="正文",
+            name="过程记忆",
+            summary="摘要",
+            body="正文",
             memory_type=MemoryType.PROCEDURE,
         )
 
@@ -77,6 +80,7 @@ class TestMemoryStore:
 
     def test_list_sorted_by_updated_at(self, store):
         import time
+
         store.create(name="旧记忆", summary="旧", body="旧")
         time.sleep(0.01)
         store.create(name="新记忆", summary="新", body="新")

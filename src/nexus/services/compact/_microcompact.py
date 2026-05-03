@@ -78,6 +78,8 @@ def microcompact_messages(
         msg.content = new_content
 
     if tokens_saved > 0:
-        log.info("Microcompact 清除了 %d 个工具结果，节省约 %d tokens", len(clear_set), tokens_saved)
+        log.info(
+            "Microcompact 清除了 %d 个工具结果，节省约 %d tokens", len(clear_set), tokens_saved
+        )
 
     return messages, tokens_saved

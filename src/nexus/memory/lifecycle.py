@@ -12,8 +12,9 @@ from nexus.memory.types import MemoryEntry, RecordStatus, utc_now
 @dataclass
 class ConsolidationPolicy:
     """Policy for memory consolidation."""
+
     decay_per_day: int = 1  # Priority decay per day
-    min_priority: int = 5    # Minimum priority after decay
+    min_priority: int = 5  # Minimum priority after decay
     dedupe_enabled: bool = True  # Enable deduplication
     archive_expired: bool = True  # Archive TTL-expired memories
     dedupe_similarity_threshold: float = 0.85  # Similarity threshold for dedupe
@@ -55,7 +56,9 @@ def consolidate_entries(
             base_time = entry.event_time or entry.created_at
             age_days = max(0, (now - base_time).days)
             if age_days > 0:
-                new_priority = max(policy.min_priority, entry.priority - age_days * policy.decay_per_day)
+                new_priority = max(
+                    policy.min_priority, entry.priority - age_days * policy.decay_per_day
+                )
                 if new_priority != entry.priority:
                     entry.priority = new_priority
                     entry.metadata["decayed_at"] = now.isoformat()

@@ -31,7 +31,12 @@ class HookRegistry:
             lines.append(f"{event.value}:")
             for hook in hooks:
                 matcher = getattr(hook, "matcher", None)
-                detail = getattr(hook, "command", None) or getattr(hook, "prompt", None) or getattr(hook, "url", None) or ""
+                detail = (
+                    getattr(hook, "command", None)
+                    or getattr(hook, "prompt", None)
+                    or getattr(hook, "url", None)
+                    or ""
+                )
                 suffix = f" matcher={matcher}" if matcher else ""
                 lines.append(f"  - {hook.type}{suffix}: {detail}")
         return "\n".join(lines)

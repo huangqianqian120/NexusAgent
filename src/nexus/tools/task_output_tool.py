@@ -26,10 +26,14 @@ class TaskOutputTool(BaseTool):
         del arguments
         return True
 
-    async def execute(self, arguments: TaskOutputToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: TaskOutputToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         del context
         try:
-            output = get_task_manager().read_task_output(arguments.task_id, max_bytes=arguments.max_bytes)
+            output = get_task_manager().read_task_output(
+                arguments.task_id, max_bytes=arguments.max_bytes
+            )
         except ValueError as exc:
             return ToolResult(output=str(exc), is_error=True)
         return ToolResult(output=output or "(no output)")

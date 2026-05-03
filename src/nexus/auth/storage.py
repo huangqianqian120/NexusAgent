@@ -84,7 +84,9 @@ def _keyring_key(provider: str, key: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def store_credential(provider: str, key: str, value: str, *, use_keyring: bool | None = None) -> None:
+def store_credential(
+    provider: str, key: str, value: str, *, use_keyring: bool | None = None
+) -> None:
     """Persist a credential for *provider* under *key*.
 
     If *use_keyring* is not set, keyring is used when available.

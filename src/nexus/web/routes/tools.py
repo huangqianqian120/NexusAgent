@@ -41,9 +41,17 @@ def register_routes(app):
     def list_tools():
         try:
             from nexus.tools import create_default_tool_registry
+
             registry = create_default_tool_registry()
             tools = registry.to_api_schema()
-            formatted = [{"name": t["name"], "description": t["description"], "parameters": t.get("input_schema", {})} for t in tools]
+            formatted = [
+                {
+                    "name": t["name"],
+                    "description": t["description"],
+                    "parameters": t.get("input_schema", {}),
+                }
+                for t in tools
+            ]
             return jsonify({"tools": formatted})
         except Exception as e:
             log.error(f"Error listing tools: {e}")
@@ -53,16 +61,20 @@ def register_routes(app):
     def get_tool(tool_name: str):
         try:
             from nexus.tools import create_default_tool_registry
+
             registry = create_default_tool_registry()
             tool = registry.get(tool_name)
             if tool is None:
                 return jsonify({"error": f"Tool not found: {tool_name}"}), 404
             schema = tool.to_api_schema()
-            return jsonify({
-                "name": schema["name"], "description": schema["description"],
-                "parameters": schema.get("input_schema", {}),
-                "is_read_only": tool.is_read_only(tool.input_model()),
-            })
+            return jsonify(
+                {
+                    "name": schema["name"],
+                    "description": schema["description"],
+                    "parameters": schema.get("input_schema", {}),
+                    "is_read_only": tool.is_read_only(tool.input_model()),
+                }
+            )
         except Exception as e:
             log.error(f"Error getting tool: {e}")
             return jsonify({"error": str(e)}), 500
@@ -73,6 +85,7 @@ def register_routes(app):
             from nexus.tools import create_default_tool_registry
             from nexus.tools.base import ToolExecutionContext
             import os
+
             registry = create_default_tool_registry()
             tool = registry.get(tool_name)
             if tool is None:
@@ -81,7 +94,14 @@ def register_routes(app):
             args = tool.input_model.model_validate(data)
             context = ToolExecutionContext(cwd=Path(os.getcwd()))
             result = _run_async(tool.execute(args, context))
-            return jsonify({"success": True, "output": result.output, "is_error": result.is_error, "metadata": result.metadata})
+            return jsonify(
+                {
+                    "success": True,
+                    "output": result.output,
+                    "is_error": result.is_error,
+                    "metadata": result.metadata,
+                }
+            )
         except Exception as e:
             log.error(f"Error executing tool {tool_name}: {e}")
             return jsonify({"error": str(e)}), 500
@@ -92,19 +112,25 @@ def register_routes(app):
     def list_tasks():
         try:
             from nexus.tasks import get_task_manager
+
             manager = get_task_manager()
             tasks = manager.list_tasks()
             formatted = []
             for task in tasks:
-                formatted.append({
-                    "id": task.id, "type": task.type, "status": task.status,
-                    "description": task.description, "cwd": task.cwd,
-                    "command": getattr(task, 'command', None),
-                    "prompt": getattr(task, 'prompt', None),
-                    "created_at": task.created_at,
-                    "started_at": getattr(task, 'started_at', None),
-                    "metadata": task.metadata,
-                })
+                formatted.append(
+                    {
+                        "id": task.id,
+                        "type": task.type,
+                        "status": task.status,
+                        "description": task.description,
+                        "cwd": task.cwd,
+                        "command": getattr(task, "command", None),
+                        "prompt": getattr(task, "prompt", None),
+                        "created_at": task.created_at,
+                        "started_at": getattr(task, "started_at", None),
+                        "metadata": task.metadata,
+                    }
+                )
             return jsonify({"tasks": formatted})
         except Exception as e:
             log.error(f"Error listing tasks: {e}")
@@ -114,19 +140,25 @@ def register_routes(app):
     def get_task(task_id: str):
         try:
             from nexus.tasks import get_task_manager
+
             manager = get_task_manager()
             task = manager.get_task(task_id)
             if task is None:
                 return jsonify({"error": f"Task not found: {task_id}"}), 404
-            return jsonify({
-                "id": task.id, "type": task.type, "status": task.status,
-                "description": task.description, "cwd": task.cwd,
-                "command": getattr(task, 'command', None),
-                "prompt": getattr(task, 'prompt', None),
-                "created_at": task.created_at,
-                "started_at": getattr(task, 'started_at', None),
-                "metadata": task.metadata,
-            })
+            return jsonify(
+                {
+                    "id": task.id,
+                    "type": task.type,
+                    "status": task.status,
+                    "description": task.description,
+                    "cwd": task.cwd,
+                    "command": getattr(task, "command", None),
+                    "prompt": getattr(task, "prompt", None),
+                    "created_at": task.created_at,
+                    "started_at": getattr(task, "started_at", None),
+                    "metadata": task.metadata,
+                }
+            )
         except Exception as e:
             log.error(f"Error getting task: {e}")
             return jsonify({"error": str(e)}), 500
@@ -136,6 +168,7 @@ def register_routes(app):
         try:
             from nexus.tasks import get_task_manager
             import os
+
             manager = get_task_manager()
             task = manager.get_task(task_id)
             if task is None:
@@ -156,6 +189,7 @@ def register_routes(app):
     def stop_task(task_id: str):
         try:
             from nexus.tasks import get_task_manager
+
             manager = get_task_manager()
             task = manager.get_task(task_id)
             if task is None:

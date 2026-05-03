@@ -62,8 +62,14 @@ class PermissionChecker:
         # Parse path rules from settings
         self._path_rules: list[PathRule] = []
         for rule in getattr(settings, "path_rules", []):
-            pattern = getattr(rule, "pattern", None) or (rule.get("pattern") if isinstance(rule, dict) else None)
-            allow = getattr(rule, "allow", True) if not isinstance(rule, dict) else rule.get("allow", True)
+            pattern = getattr(rule, "pattern", None) or (
+                rule.get("pattern") if isinstance(rule, dict) else None
+            )
+            allow = (
+                getattr(rule, "allow", True)
+                if not isinstance(rule, dict)
+                else rule.get("allow", True)
+            )
             if isinstance(pattern, str) and pattern.strip():
                 self._path_rules.append(PathRule(pattern=pattern.strip(), allow=allow))
             else:

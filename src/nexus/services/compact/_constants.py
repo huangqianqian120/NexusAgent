@@ -2,16 +2,18 @@
 
 from typing import Literal
 
-COMPACTABLE_TOOLS: frozenset[str] = frozenset({
-    "read_file",
-    "bash",
-    "grep",
-    "glob",
-    "web_search",
-    "web_fetch",
-    "edit_file",
-    "write_file",
-})
+COMPACTABLE_TOOLS: frozenset[str] = frozenset(
+    {
+        "read_file",
+        "bash",
+        "grep",
+        "glob",
+        "web_search",
+        "web_fetch",
+        "edit_file",
+        "write_file",
+    }
+)
 
 TIME_BASED_MC_CLEARED_MESSAGE = "[Old tool result content cleared]"
 

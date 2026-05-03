@@ -293,10 +293,7 @@ def claude_oauth_betas() -> list[str]:
 def claude_attribution_header() -> str:
     """Return the Claude Code billing attribution prefix used in system prompts."""
     version = get_claude_code_version()
-    return (
-        "x-anthropic-billing-header: "
-        f"cc_version={version}; cc_entrypoint=cli;"
-    )
+    return f"x-anthropic-billing-header: cc_version={version}; cc_entrypoint=cli;"
 
 
 def claude_oauth_headers() -> dict[str, str]:

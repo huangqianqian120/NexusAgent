@@ -25,7 +25,9 @@ class McpAuthTool(BaseTool):
     description = "Configure auth for an MCP server and reconnect active sessions when possible."
     input_model = McpAuthToolInput
 
-    async def execute(self, arguments: McpAuthToolInput, context: ToolExecutionContext) -> ToolResult:
+    async def execute(
+        self, arguments: McpAuthToolInput, context: ToolExecutionContext
+    ) -> ToolResult:
         settings = load_settings()
         mcp_manager = context.metadata.get("mcp_manager")
         config = settings.mcp_servers.get(arguments.server_name)
@@ -38,18 +40,26 @@ class McpAuthTool(BaseTool):
 
         if isinstance(config, McpStdioServerConfig):
             if arguments.mode not in {"env", "bearer"}:
-                return ToolResult(output="stdio MCP auth supports env or bearer modes", is_error=True)
+                return ToolResult(
+                    output="stdio MCP auth supports env or bearer modes", is_error=True
+                )
             env_key = arguments.key or "MCP_AUTH_TOKEN"
             env = dict(config.env or {})
-            env[env_key] = f"Bearer {arguments.value}" if arguments.mode == "bearer" else arguments.value
+            env[env_key] = (
+                f"Bearer {arguments.value}" if arguments.mode == "bearer" else arguments.value
+            )
             updated = config.model_copy(update={"env": env})
         elif isinstance(config, (McpHttpServerConfig, McpWebSocketServerConfig)):
             if arguments.mode not in {"header", "bearer"}:
-                return ToolResult(output="http/ws MCP auth supports header or bearer modes", is_error=True)
+                return ToolResult(
+                    output="http/ws MCP auth supports header or bearer modes", is_error=True
+                )
             header_key = arguments.key or "Authorization"
             headers = dict(config.headers)
             headers[header_key] = (
-                f"Bearer {arguments.value}" if arguments.mode == "bearer" and header_key == "Authorization" else arguments.value
+                f"Bearer {arguments.value}"
+                if arguments.mode == "bearer" and header_key == "Authorization"
+                else arguments.value
             )
             updated = config.model_copy(update={"headers": headers})
         else:

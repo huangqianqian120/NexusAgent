@@ -72,9 +72,13 @@ class HookExecutor:
             elif isinstance(hook, HttpHookDefinition):
                 results.append(await self._run_http_hook(hook, event, payload))
             elif isinstance(hook, PromptHookDefinition):
-                results.append(await self._run_prompt_like_hook(hook, event, payload, agent_mode=False))
+                results.append(
+                    await self._run_prompt_like_hook(hook, event, payload, agent_mode=False)
+                )
             elif isinstance(hook, AgentHookDefinition):
-                results.append(await self._run_prompt_like_hook(hook, event, payload, agent_mode=True))
+                results.append(
+                    await self._run_prompt_like_hook(hook, event, payload, agent_mode=True)
+                )
         return AggregatedHookResult(results=results)
 
     async def _run_command_hook(
@@ -120,10 +124,12 @@ class HookExecutor:
             )
 
         output = "\n".join(
-            part for part in (
+            part
+            for part in (
                 stdout.decode("utf-8", errors="replace").strip(),
                 stderr.decode("utf-8", errors="replace").strip(),
-            ) if part
+            )
+            if part
         )
         success = process.returncode == 0
         return HookResult(
@@ -177,7 +183,7 @@ class HookExecutor:
         prompt = _inject_arguments(hook.prompt, payload)
         prefix = (
             "You are validating whether a hook condition passes in Nexus. "
-            "Return strict JSON: {\"ok\": true} or {\"ok\": false, \"reason\": \"...\"}."
+            'Return strict JSON: {"ok": true} or {"ok": false, "reason": "..."}.'
         )
         if agent_mode:
             prefix += " Be more thorough and reason over the payload before deciding."
@@ -220,9 +226,7 @@ def _matches_hook(hook: HookDefinition, payload: dict[str, Any]) -> bool:
     return fnmatch.fnmatch(subject, matcher)
 
 
-def _inject_arguments(
-    template: str, payload: dict[str, Any], *, shell_escape: bool = False
-) -> str:
+def _inject_arguments(template: str, payload: dict[str, Any], *, shell_escape: bool = False) -> str:
     serialized = json.dumps(payload, ensure_ascii=True)
     if shell_escape:
         serialized = shlex.quote(serialized)

@@ -64,14 +64,16 @@ def _convert_tools_to_openai(tools: list[dict[str, Any]]) -> list[dict[str, Any]
     """
     result = []
     for tool in tools:
-        result.append({
-            "type": "function",
-            "function": {
-                "name": tool["name"],
-                "description": tool.get("description", ""),
-                "parameters": tool.get("input_schema", {}),
-            },
-        })
+        result.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": tool["name"],
+                    "description": tool.get("description", ""),
+                    "parameters": tool.get("input_schema", {}),
+                },
+            }
+        )
     return result
 
 
@@ -104,11 +106,13 @@ def _convert_messages_to_openai(
             if tool_results:
                 # Each tool result becomes a separate message with role="tool"
                 for tr in tool_results:
-                    openai_messages.append({
-                        "role": "tool",
-                        "tool_call_id": tr.tool_use_id,
-                        "content": tr.content,
-                    })
+                    openai_messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tr.tool_use_id,
+                            "content": tr.content,
+                        }
+                    )
             if user_blocks:
                 content = _convert_user_content_to_openai(user_blocks)
                 if isinstance(content, str):
@@ -134,12 +138,14 @@ def _convert_user_content_to_openai(blocks: list[ContentBlock]) -> str | list[di
         if isinstance(block, TextBlock) and block.text:
             content.append({"type": "text", "text": block.text})
         elif isinstance(block, ImageBlock):
-            content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:{block.media_type};base64,{block.data}",
-                },
-            })
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{block.media_type};base64,{block.data}",
+                    },
+                }
+            )
     return content
 
 
@@ -198,11 +204,13 @@ def _parse_assistant_response(response: Any) -> ConversationMessage:
                 args = json.loads(tc.function.arguments)
             except (json.JSONDecodeError, TypeError):
                 args = {}
-            content.append(ToolUseBlock(
-                id=tc.id,
-                name=tc.function.name,
-                input=args,
-            ))
+            content.append(
+                ToolUseBlock(
+                    id=tc.id,
+                    name=tc.function.name,
+                    input=args,
+                )
+            )
 
     return ConversationMessage(role="assistant", content=content)
 
@@ -236,10 +244,13 @@ class OpenAICompatibleClient:
                 if attempt >= MAX_RETRIES or not self._is_retryable(exc):
                     raise self._translate_error(exc) from exc
 
-                delay = min(BASE_DELAY * (2 ** attempt), MAX_DELAY)
+                delay = min(BASE_DELAY * (2**attempt), MAX_DELAY)
                 log.warning(
                     "OpenAI API request failed (attempt %d/%d), retrying in %.1fs: %s",
-                    attempt + 1, MAX_RETRIES + 1, delay, exc,
+                    attempt + 1,
+                    MAX_RETRIES + 1,
+                    delay,
+                    exc,
                 )
                 yield ApiRetryEvent(
                     message=str(exc),
@@ -346,11 +357,13 @@ class OpenAICompatibleClient:
                 args = json.loads(tc["arguments"])
             except (json.JSONDecodeError, TypeError):
                 args = {}
-            content.append(ToolUseBlock(
-                id=tc["id"],
-                name=tc["name"],
-                input=args,
-            ))
+            content.append(
+                ToolUseBlock(
+                    id=tc["id"],
+                    name=tc["name"],
+                    input=args,
+                )
+            )
 
         final_message = ConversationMessage(role="assistant", content=content)
 

@@ -125,7 +125,7 @@ class QQChannel(BaseChannel):
             self._processed_ids.append(data.id)
 
             author = data.author
-            user_id = str(getattr(author, 'id', None) or getattr(author, 'user_openid', 'unknown'))
+            user_id = str(getattr(author, "id", None) or getattr(author, "user_openid", "unknown"))
             content = (data.content or "").strip()
             if not content:
                 return
@@ -138,4 +138,3 @@ class QQChannel(BaseChannel):
             )
         except Exception:
             logger.exception("Error handling QQ message")
-

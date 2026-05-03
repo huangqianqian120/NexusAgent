@@ -123,6 +123,7 @@ class TestMemoryEntry:
         """验证 MemoryHeader 是独立的 dataclass，拥有扫描所需字段."""
         from nexus.memory.types import MemoryHeader
         from pathlib import Path
+
         header = MemoryHeader(
             path=Path("/tmp/test.md"),
             title="测试记忆",

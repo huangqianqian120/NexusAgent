@@ -15,6 +15,7 @@ def utc_now() -> datetime:
 
 class MemoryType(str, Enum):
     """Type of memory entry."""
+
     FACT = "fact"
     EPISODE = "episode"
     PREFERENCE = "preference"
@@ -23,6 +24,7 @@ class MemoryType(str, Enum):
 
 class RecordStatus(str, Enum):
     """Lifecycle status of a memory entry."""
+
     ACTIVE = "active"
     SUPERSEDED = "superseded"
     ARCHIVED = "archived"
@@ -31,6 +33,7 @@ class RecordStatus(str, Enum):
 @dataclass(slots=True)
 class MemoryRelation:
     """Relation to another memory entry."""
+
     target_id: str
     relation: str
     weight: float = 1.0
@@ -39,6 +42,7 @@ class MemoryRelation:
 @dataclass(slots=True)
 class MemoryEntry:
     """Lightweight memory header for fast recall."""
+
     id: str
     name: str
     memory_type: MemoryType = MemoryType.FACT
@@ -63,6 +67,7 @@ class MemoryEntry:
 @dataclass(slots=True)
 class MemoryHeader:
     """扫描到的记忆文件头信息（独立于 MemoryEntry 存储模型）."""
+
     path: Path
     title: str = ""
     description: str = ""
@@ -74,6 +79,7 @@ class MemoryHeader:
 @dataclass(slots=True)
 class MemoryContent:
     """Full memory content body."""
+
     id: str
     body: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -82,6 +88,7 @@ class MemoryContent:
 @dataclass(slots=True)
 class MemoryQuery:
     """Query parameters for memory recall."""
+
     text: str = ""
     limit: int = 8
     budget_tokens: int = 2000
@@ -95,6 +102,7 @@ class MemoryQuery:
 @dataclass(slots=True)
 class RecallScoreBreakdown:
     """Score breakdown for a recalled memory."""
+
     memory_id: str
     lexical_score: float = 0.0
     recency_score: float = 0.0
@@ -107,6 +115,7 @@ class RecallScoreBreakdown:
 @dataclass(slots=True)
 class DroppedCandidate:
     """Memory that was not selected during recall."""
+
     memory_id: str
     reason: str
     final_score: float = 0.0
@@ -116,6 +125,7 @@ class DroppedCandidate:
 @dataclass(slots=True)
 class RecallResult:
     """Result of a memory recall operation."""
+
     entries: list[MemoryEntry]
     contents: dict[str, MemoryContent]
     candidates_scanned: int = 0

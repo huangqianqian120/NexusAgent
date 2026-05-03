@@ -105,7 +105,4 @@ async def _glob(root: Path, pattern: str, *, limit: int) -> list[str]:
         return lines
 
     # Fallback: non-recursive patterns are usually cheap; keep Python semantics.
-    return sorted(
-        str(path.relative_to(root))
-        for path in root.glob(pattern)
-    )[:limit]
+    return sorted(str(path.relative_to(root)) for path in root.glob(pattern))[:limit]

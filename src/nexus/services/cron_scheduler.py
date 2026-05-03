@@ -38,6 +38,7 @@ TICK_INTERVAL_SECONDS = 30
 # History helpers
 # ---------------------------------------------------------------------------
 
+
 def get_history_path() -> Path:
     """Return the path to the cron execution history file."""
     return get_data_dir() / "cron_history.jsonl"
@@ -74,6 +75,7 @@ def load_history(*, limit: int = 50, job_name: str | None = None) -> list[dict[s
 # ---------------------------------------------------------------------------
 # PID file helpers
 # ---------------------------------------------------------------------------
+
 
 def get_pid_path() -> Path:
     """Return the scheduler PID file path."""
@@ -146,6 +148,7 @@ def stop_scheduler() -> bool:
 # ---------------------------------------------------------------------------
 # Job execution
 # ---------------------------------------------------------------------------
+
 
 async def execute_job(job: dict[str, Any]) -> dict[str, Any]:
     """Run a single cron job and return a history entry."""
@@ -235,6 +238,7 @@ async def execute_job(job: dict[str, Any]) -> dict[str, Any]:
 # Scheduler loop
 # ---------------------------------------------------------------------------
 
+
 def _jobs_due(jobs: list[dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
     """Return jobs whose next_run is at or before *now*."""
     due: list[dict[str, Any]] = []
@@ -304,6 +308,7 @@ async def run_scheduler_loop(*, once: bool = False) -> None:
 # ---------------------------------------------------------------------------
 # Daemon entry point (spawned by ``nx cron start``)
 # ---------------------------------------------------------------------------
+
 
 def _run_daemon() -> None:
     """Entry point for the scheduler subprocess."""

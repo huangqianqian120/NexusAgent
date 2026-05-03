@@ -51,7 +51,11 @@ class NotebookEditTool(BaseTool):
             cell.setdefault("execution_count", None)
 
         existing = _normalize_source(cell.get("source", ""))
-        updated = arguments.new_source if arguments.mode == "replace" else f"{existing}{arguments.new_source}"
+        updated = (
+            arguments.new_source
+            if arguments.mode == "replace"
+            else f"{existing}{arguments.new_source}"
+        )
         cell["source"] = updated
 
         path.parent.mkdir(parents=True, exist_ok=True)

@@ -112,7 +112,9 @@ class WebBackendHost:
                         break
                     continue
                 if request.type != "submit_line":
-                    await self._emit(BackendEvent(type="error", message=f"Unknown request type: {request.type}"))
+                    await self._emit(
+                        BackendEvent(type="error", message=f"Unknown request type: {request.type}")
+                    )
                     continue
                 if self._busy:
                     await self._emit(BackendEvent(type="error", message="Session is busy"))
@@ -155,12 +157,18 @@ class WebBackendHost:
                 await self._emit(BackendEvent(type="error", message=f"Invalid request: {exc}"))
                 continue
 
-            if request.type == "permission_response" and request.request_id in self._permission_requests:
+            if (
+                request.type == "permission_response"
+                and request.request_id in self._permission_requests
+            ):
                 future = self._permission_requests[request.request_id]
                 if not future.done():
                     future.set_result(bool(request.allowed))
                 continue
-            if request.type == "question_response" and request.request_id in self._question_requests:
+            if (
+                request.type == "question_response"
+                and request.request_id in self._question_requests
+            ):
                 future = self._question_requests[request.request_id]
                 if not future.done():
                     future.set_result(request.answer or "")
@@ -170,12 +178,17 @@ class WebBackendHost:
     async def _process_line(self, line: str, *, transcript_line: str | None = None) -> bool:
         assert self._bundle is not None
         await self._emit(
-            BackendEvent(type="transcript_item", item=TranscriptItem(role="user", text=transcript_line or line))
+            BackendEvent(
+                type="transcript_item",
+                item=TranscriptItem(role="user", text=transcript_line or line),
+            )
         )
 
         async def _print_system(message: str) -> None:
             await self._emit(
-                BackendEvent(type="transcript_item", item=TranscriptItem(role="system", text=message))
+                BackendEvent(
+                    type="transcript_item", item=TranscriptItem(role="system", text=message)
+                )
             )
 
         async def _render_event(event: StreamEvent) -> None:
@@ -264,7 +277,9 @@ class WebBackendHost:
             active_profile = settings.active_profile
             profile_name, profile = settings.resolve_profile(active_profile)
             current_model = profile.last_model or profile.default_model
-            options = self._model_select_options(current_model, profile.provider, profile.allowed_models)
+            options = self._model_select_options(
+                current_model, profile.provider, profile.allowed_models
+            )
             await self._emit(
                 BackendEvent(
                     type="select_request",
@@ -276,6 +291,7 @@ class WebBackendHost:
 
         if command == "provider":
             from nexus.auth.manager import AuthManager
+
             manager = AuthManager(settings)
             profiles = manager.get_profile_statuses()
             active = manager.get_active_profile()
@@ -299,9 +315,14 @@ class WebBackendHost:
 
         if command == "permissions":
             from nexus.permissions.modes import PermissionMode
+
             current = settings.permission.mode.value
             options = [
-                {"value": mode.value, "label": _PERMISSION_LABELS.get(mode.value, mode.value), "active": mode.value == current}
+                {
+                    "value": mode.value,
+                    "label": _PERMISSION_LABELS.get(mode.value, mode.value),
+                    "active": mode.value == current,
+                }
                 for mode in PermissionMode
             ]
             await self._emit(
@@ -327,9 +348,13 @@ class WebBackendHost:
             )
             return
 
-        await self._emit(BackendEvent(type="error", message=f"No selector available for /{command}"))
+        await self._emit(
+            BackendEvent(type="error", message=f"No selector available for /{command}")
+        )
 
-    def _model_select_options(self, current_model: str, provider: str, allowed_models: list[str] | None = None) -> list[dict[str, object]]:
+    def _model_select_options(
+        self, current_model: str, provider: str, allowed_models: list[str] | None = None
+    ) -> list[dict[str, object]]:
         from nexus.config.settings import CLAUDE_MODEL_ALIAS_OPTIONS
 
         if allowed_models:
@@ -354,7 +379,13 @@ class WebBackendHost:
                 for value, label, description in CLAUDE_MODEL_ALIAS_OPTIONS
             ]
         families: list[tuple[str, str]] = []
-        if provider_name in {"openai-codex", "openai", "openai-compatible", "openrouter", "github_copilot"}:
+        if provider_name in {
+            "openai-codex",
+            "openai",
+            "openai-compatible",
+            "openrouter",
+            "github_copilot",
+        }:
             families.extend(
                 [
                     ("gpt-5.4", "OpenAI flagship"),
@@ -443,7 +474,9 @@ class WebBackendHost:
         try:
             return await asyncio.wait_for(future, timeout=600)
         except asyncio.TimeoutError:
-            log.warning("Question request %s timed out after 600s, returning empty answer", request_id)
+            log.warning(
+                "Question request %s timed out after 600s, returning empty answer", request_id
+            )
             return ""
         finally:
             self._question_requests.pop(request_id, None)
@@ -471,10 +504,12 @@ class WebBackendHost:
         for s in sessions:
             ts = _time.strftime("%m/%d %H:%M", _time.localtime(s["created_at"]))
             summary = s.get("summary", "")[:50] or "(no summary)"
-            options.append({
-                "value": s["session_id"],
-                "label": f"{ts}  {s['message_count']}msg  {summary}",
-            })
+            options.append(
+                {
+                    "value": s["session_id"],
+                    "label": f"{ts}  {s['message_count']}msg  {summary}",
+                }
+            )
         await self._emit(
             BackendEvent(
                 type="select_request",
@@ -488,7 +523,9 @@ class WebBackendHost:
         selected = value.strip()
         line = self._build_select_command_line(command, selected)
         if line is None:
-            await self._emit(BackendEvent(type="error", message=f"Unknown select command: {command_name}"))
+            await self._emit(
+                BackendEvent(type="error", message=f"Unknown select command: {command_name}")
+            )
             await self._emit(BackendEvent(type="line_complete"))
             return True
         return await self._process_line(line, transcript_line=f"/{command}")

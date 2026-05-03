@@ -41,6 +41,7 @@ def detect_os() -> tuple[str, str]:
     if system == "Linux":
         try:
             import distro  # type: ignore[import-untyped]
+
             return "Linux", distro.version(pretty=True) or platform.release()
         except ImportError:
             return "Linux", platform.release()
@@ -111,7 +112,10 @@ def get_environment_info(cwd: str | None = None) -> EnvironmentInfo:
     if not virtual_env:
         executable_path = Path(python_executable)
         candidate = executable_path.parent.parent
-        if executable_path.parent.name in {"bin", "Scripts"} and (candidate / "pyvenv.cfg").exists():
+        if (
+            executable_path.parent.name in {"bin", "Scripts"}
+            and (candidate / "pyvenv.cfg").exists()
+        ):
             virtual_env = str(candidate)
 
     os_name, os_version = detect_os()

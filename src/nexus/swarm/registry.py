@@ -45,7 +45,9 @@ def _detect_iterm2() -> bool:
     Checks ``$ITERM_SESSION_ID`` which iTerm2 sets for every terminal session.
     """
     if os.environ.get("ITERM_SESSION_ID"):
-        logger.debug("[BackendRegistry] _detect_iterm2: ITERM_SESSION_ID=%s", os.environ["ITERM_SESSION_ID"])
+        logger.debug(
+            "[BackendRegistry] _detect_iterm2: ITERM_SESSION_ID=%s", os.environ["ITERM_SESSION_ID"]
+        )
         return True
     logger.debug("[BackendRegistry] _detect_iterm2: ITERM_SESSION_ID not set")
     return False
@@ -137,18 +139,14 @@ class BackendRegistry:
             The detected :data:`BackendType` string.
         """
         if self._detected is not None:
-            logger.debug(
-                "[BackendRegistry] Using cached backend detection: %s", self._detected
-            )
+            logger.debug("[BackendRegistry] Using cached backend detection: %s", self._detected)
             return self._detected
 
         logger.debug("[BackendRegistry] Starting backend detection...")
 
         # Priority 1: in-process fallback (activated after a prior failed spawn)
         if self._in_process_fallback_active:
-            logger.debug(
-                "[BackendRegistry] in_process fallback active — selecting in_process"
-            )
+            logger.debug("[BackendRegistry] in_process fallback active — selecting in_process")
             self._detected = "in_process"
             self._detection_result = BackendDetectionResult(
                 backend="in_process",
@@ -220,19 +218,17 @@ class BackendRegistry:
         # Priority 2: in iTerm2, try native panes
         if in_iterm2:
             it2_available = _is_it2_cli_available()
-            logger.debug(
-                "[BackendRegistry] iTerm2 detected, it2 CLI available: %s", it2_available
-            )
+            logger.debug("[BackendRegistry] iTerm2 detected, it2 CLI available: %s", it2_available)
 
             if it2_available:
-                logger.debug("[BackendRegistry] Selected pane backend: iterm2 (native with it2 CLI)")
+                logger.debug(
+                    "[BackendRegistry] Selected pane backend: iterm2 (native with it2 CLI)"
+                )
                 return BackendDetectionResult(backend="iterm2", is_native=True)
 
             # it2 not available — can we fall back to tmux?
             tmux_bin = is_tmux_available()
-            logger.debug(
-                "[BackendRegistry] it2 not available, tmux binary available: %s", tmux_bin
-            )
+            logger.debug("[BackendRegistry] it2 not available, tmux binary available: %s", tmux_bin)
 
             if tmux_bin:
                 logger.debug(
@@ -245,19 +241,14 @@ class BackendRegistry:
                     needs_setup=True,
                 )
 
-            logger.debug(
-                "[BackendRegistry] ERROR: in iTerm2 but no it2 CLI and no tmux"
-            )
+            logger.debug("[BackendRegistry] ERROR: in iTerm2 but no it2 CLI and no tmux")
             raise RuntimeError(
-                "iTerm2 detected but it2 CLI not installed.\n"
-                "Install it2 with: pip install it2"
+                "iTerm2 detected but it2 CLI not installed.\nInstall it2 with: pip install it2"
             )
 
         # Priority 3: not in tmux or iTerm2 — use tmux external session if available
         tmux_bin = is_tmux_available()
-        logger.debug(
-            "[BackendRegistry] Not in tmux or iTerm2, tmux binary available: %s", tmux_bin
-        )
+        logger.debug("[BackendRegistry] Not in tmux or iTerm2, tmux binary available: %s", tmux_bin)
 
         if tmux_bin:
             logger.debug("[BackendRegistry] Selected pane backend: tmux (external session mode)")
@@ -284,9 +275,7 @@ class BackendRegistry:
         executor = self._backends.get(resolved)
         if executor is None:
             available = list(self._backends.keys())
-            raise KeyError(
-                f"Backend {resolved!r} is not registered. Available: {available}"
-            )
+            raise KeyError(f"Backend {resolved!r} is not registered. Available: {available}")
         return executor
 
     def get_preferred_backend(self, config: dict | None = None) -> BackendType:

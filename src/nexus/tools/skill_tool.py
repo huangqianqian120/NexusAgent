@@ -31,7 +31,11 @@ class SkillTool(BaseTool):
             extra_skill_dirs=context.metadata.get("extra_skill_dirs"),
             extra_plugin_roots=context.metadata.get("extra_plugin_roots"),
         )
-        skill = registry.get(arguments.name) or registry.get(arguments.name.lower()) or registry.get(arguments.name.title())
+        skill = (
+            registry.get(arguments.name)
+            or registry.get(arguments.name.lower())
+            or registry.get(arguments.name.title())
+        )
         if skill is None:
             return ToolResult(output=f"Skill not found: {arguments.name}", is_error=True)
         return ToolResult(output=skill.content)

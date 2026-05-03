@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field
 # 直接加载 nexus.tools.base 模块，不经过 __init__.py（避免触发 MCP 导入错误）
 _base_path = Path(__file__).parent.parent / "src" / "nexus" / "tools" / "base.py"
 _spec = importlib.util.spec_from_file_location(
-    "nexus.tools.base_direct", str(_base_path),
+    "nexus.tools.base_direct",
+    str(_base_path),
     submodule_search_locations=[],
 )
 _base_mod = importlib.util.module_from_spec(_spec)
@@ -30,6 +31,7 @@ ToolResult = _base_mod.ToolResult
 # ---------------------------------------------------------------------------
 # 测试用简单工具
 # ---------------------------------------------------------------------------
+
 
 class EchoInput(BaseModel):
     message: str = Field(description="要回显的消息")

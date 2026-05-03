@@ -47,8 +47,7 @@ class FileReadTool(BaseTool):
         lines = text.splitlines()
         selected = lines[arguments.offset : arguments.offset + arguments.limit]
         numbered = [
-            f"{arguments.offset + index + 1:>6}\t{line}"
-            for index, line in enumerate(selected)
+            f"{arguments.offset + index + 1:>6}\t{line}" for index, line in enumerate(selected)
         ]
         if not numbered:
             return ToolResult(output=f"(no content in selected range for {path})")

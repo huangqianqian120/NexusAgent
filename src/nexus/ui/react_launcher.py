@@ -14,6 +14,7 @@ def _resolve_theme() -> str:
     """Read the theme name from settings, defaulting to 'default'."""
     try:
         from nexus.config.settings import load_settings
+
         return load_settings().theme or "default"
     except Exception:
         return "default"

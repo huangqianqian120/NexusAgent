@@ -50,6 +50,7 @@ app.add_typer(cron_app)
 
 # ---- mcp subcommands ----
 
+
 @mcp_app.command("list")
 def mcp_list() -> None:
     """List configured MCP servers."""
@@ -107,6 +108,7 @@ def mcp_remove(
 
 # ---- plugin subcommands ----
 
+
 @plugin_app.command("list")
 def plugin_list() -> None:
     """List installed plugins."""
@@ -146,6 +148,7 @@ def plugin_uninstall(
 
 
 # ---- cron subcommands ----
+
 
 @cron_app.command("start")
 def cron_start() -> None:
@@ -381,14 +384,25 @@ def _prompt_model_for_profile(profile) -> str:
         if len(profile.allowed_models) == 1:
             return profile.allowed_models[0]
         options = [(value, value) for value in profile.allowed_models]
-        return _select_from_menu("Choose a model setting:", options, default_value=current if current in profile.allowed_models else profile.allowed_models[0])
+        return _select_from_menu(
+            "Choose a model setting:",
+            options,
+            default_value=current
+            if current in profile.allowed_models
+            else profile.allowed_models[0],
+        )
     if is_claude_family_provider(profile.provider):
-        options = [(value, f"{label} - {description}") for value, label, description in CLAUDE_MODEL_ALIAS_OPTIONS]
+        options = [
+            (value, f"{label} - {description}")
+            for value, label, description in CLAUDE_MODEL_ALIAS_OPTIONS
+        ]
         options.append(("__custom__", "Custom model ID"))
         selection = _select_from_menu(
             "Choose a model setting:",
             options,
-            default_value=current if any(value == current for value, _, _ in CLAUDE_MODEL_ALIAS_OPTIONS) else "__custom__",
+            default_value=current
+            if any(value == current for value, _, _ in CLAUDE_MODEL_ALIAS_OPTIONS)
+            else "__custom__",
         )
         if selection != "__custom__":
             return selection
@@ -449,9 +463,13 @@ def _select_setup_workflow(
                         ("", "  "),
                         (suffix_style, suffix.strip()),
                     ]
-            choices.append(questionary.Choice(title=title, value=name, checked=(name == default_value)))
+            choices.append(
+                questionary.Choice(title=title, value=name, checked=(name == default_value))
+            )
 
-        result = questionary.select("Choose a provider workflow:", choices=choices, default=default_value).ask()
+        result = questionary.select(
+            "Choose a provider workflow:", choices=choices, default=default_value
+        ).ask()
         if result is None:
             raise typer.Abort()
         return str(result)
@@ -572,7 +590,11 @@ def _specialize_setup_target(manager, target: str) -> str:
         if choice == "claude-api":
             return choice
         defaults = {
-            "kimi-anthropic": ("Kimi (Anthropic-compatible)", "https://api.moonshot.cn/anthropic", "kimi-k2.5"),
+            "kimi-anthropic": (
+                "Kimi (Anthropic-compatible)",
+                "https://api.moonshot.cn/anthropic",
+                "kimi-k2.5",
+            ),
             "glm-anthropic": ("GLM (Anthropic-compatible)", "", "glm-4.5"),
             "minimax-anthropic": ("MiniMax (Anthropic-compatible)", "", "minimax-m1"),
         }
@@ -801,7 +823,9 @@ def setup_cmd(
 
 @auth_app.command("login")
 def auth_login(
-    provider: Optional[str] = typer.Argument(None, help="Provider name (anthropic, openai, copilot, …)"),
+    provider: Optional[str] = typer.Argument(
+        None, help="Provider name (anthropic, openai, copilot, …)"
+    ),
 ) -> None:
     """Interactively authenticate with a provider.
 
@@ -854,12 +878,16 @@ def auth_status_cmd() -> None:
     for name, info in profiles.items():
         status_str = "ready" if info["configured"] else info.get("auth_state", "missing auth")
         active_str = "<-- active" if info["active"] else ""
-        print(f"{name:<20} {info['provider']:<18} {info['auth_source']:<22} {status_str:<12} {active_str}")
+        print(
+            f"{name:<20} {info['provider']:<18} {info['auth_source']:<22} {status_str:<12} {active_str}"
+        )
 
 
 @auth_app.command("logout")
 def auth_logout(
-    provider: Optional[str] = typer.Argument(None, help="Provider to log out (default: active provider)"),
+    provider: Optional[str] = typer.Argument(
+        None, help="Provider to log out (default: active provider)"
+    ),
 ) -> None:
     """Clear stored authentication for a provider."""
     from nexus.auth.manager import AuthManager
@@ -1003,8 +1031,12 @@ def provider_add(
     auth_source: str = typer.Option(..., "--auth-source", help="Auth source name"),
     model: str = typer.Option(..., "--model", help="Default model"),
     base_url: str | None = typer.Option(None, "--base-url", help="Optional base URL"),
-    credential_slot: str | None = typer.Option(None, "--credential-slot", help="Optional profile-specific credential slot"),
-    allowed_models: list[str] | None = typer.Option(None, "--allowed-model", help="Allowed model values for this profile"),
+    credential_slot: str | None = typer.Option(
+        None, "--credential-slot", help="Optional profile-specific credential slot"
+    ),
+    allowed_models: list[str] | None = typer.Option(
+        None, "--allowed-model", help="Allowed model values for this profile"
+    ),
 ) -> None:
     """Create a provider profile."""
     from nexus.auth.manager import AuthManager
@@ -1021,8 +1053,14 @@ def provider_add(
             default_model=model,
             last_model=model,
             base_url=base_url,
-            credential_slot=credential_slot or _default_credential_slot_for_profile(name, auth_source),
-            allowed_models=allowed_models or ([model] if credential_slot or _default_credential_slot_for_profile(name, auth_source) else []),
+            credential_slot=credential_slot
+            or _default_credential_slot_for_profile(name, auth_source),
+            allowed_models=allowed_models
+            or (
+                [model]
+                if credential_slot or _default_credential_slot_for_profile(name, auth_source)
+                else []
+            ),
         ),
     )
     print(f"Saved provider profile: {name}", flush=True)
@@ -1037,8 +1075,12 @@ def provider_edit(
     auth_source: str | None = typer.Option(None, "--auth-source", help="Auth source name"),
     model: str | None = typer.Option(None, "--model", help="Default model"),
     base_url: str | None = typer.Option(None, "--base-url", help="Optional base URL"),
-    credential_slot: str | None = typer.Option(None, "--credential-slot", help="Optional profile-specific credential slot"),
-    allowed_models: list[str] | None = typer.Option(None, "--allowed-model", help="Allowed model values for this profile"),
+    credential_slot: str | None = typer.Option(
+        None, "--credential-slot", help="Optional profile-specific credential slot"
+    ),
+    allowed_models: list[str] | None = typer.Option(
+        None, "--allowed-model", help="Allowed model values for this profile"
+    ),
 ) -> None:
     """Edit a provider profile."""
     from nexus.auth.manager import AuthManager
@@ -1078,9 +1120,11 @@ def provider_remove(
         raise typer.Exit(1)
     print(f"Removed provider profile: {name}", flush=True)
 
+
 # ---------------------------------------------------------------------------
 # Main command
 # ---------------------------------------------------------------------------
+
 
 @app.callback(invoke_without_command=True)
 def main(
@@ -1274,7 +1318,9 @@ def main(
         logging.getLogger("nexus").setLevel(logging.DEBUG)
     elif os.environ.get("OPENHARNESS_LOG_LEVEL"):
         lvl = getattr(logging, os.environ["OPENHARNESS_LOG_LEVEL"].upper(), logging.WARNING)
-        logging.basicConfig(level=lvl, format="%(asctime)s [%(name)s] %(levelname)s %(message)s", stream=sys.stderr)
+        logging.basicConfig(
+            level=lvl, format="%(asctime)s [%(name)s] %(levelname)s %(message)s", stream=sys.stderr
+        )
 
     if dangerously_skip_permissions:
         permission_mode = "full_auto"
@@ -1312,7 +1358,9 @@ def main(
                 raise typer.Exit(1)
             print("Saved sessions:")
             for i, s in enumerate(sessions, 1):
-                print(f"  {i}. [{s['session_id']}] {s.get('summary', '?')[:50]} ({s['message_count']} msgs)")
+                print(
+                    f"  {i}. [{s['session_id']}] {s.get('summary', '?')[:50]} ({s['message_count']} msgs)"
+                )
             choice = typer.prompt("Enter session number or ID")
             try:
                 idx = int(choice) - 1
@@ -1352,7 +1400,9 @@ def main(
     if print_mode is not None:
         prompt = print_mode.strip()
         if not prompt:
-            print("Error: -p/--print requires a prompt value, e.g. -p 'your prompt'", file=sys.stderr)
+            print(
+                "Error: -p/--print requires a prompt value, e.g. -p 'your prompt'", file=sys.stderr
+            )
             raise typer.Exit(1)
         asyncio.run(
             run_print_mode(

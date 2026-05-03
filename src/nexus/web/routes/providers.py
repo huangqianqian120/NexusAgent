@@ -19,11 +19,15 @@ def register_routes(app):
         try:
             settings = load_settings()
             profile_name, profile = settings.resolve_profile()
-            return jsonify({
-                "profile": profile_name, "provider": profile.provider,
-                "model": profile.last_model or profile.default_model,
-                "base_url": profile.base_url, "auth_source": profile.auth_source,
-            })
+            return jsonify(
+                {
+                    "profile": profile_name,
+                    "provider": profile.provider,
+                    "model": profile.last_model or profile.default_model,
+                    "base_url": profile.base_url,
+                    "auth_source": profile.auth_source,
+                }
+            )
         except Exception as e:
             log.error(f"Error getting provider: {e}")
             return jsonify({"error": str(e)}), 500
@@ -65,16 +69,26 @@ def register_routes(app):
                     models.append({"id": m, "name": m, "description": "Allowed model"})
             else:
                 from nexus.config.settings import CLAUDE_MODEL_ALIAS_OPTIONS
+
                 if profile.provider in {"anthropic", "anthropic_claude"}:
                     for value, label, desc in CLAUDE_MODEL_ALIAS_OPTIONS:
                         models.append({"id": value, "name": label, "description": desc})
                 elif profile.base_url and "bigmodel.cn" in profile.base_url:
-                    for m in ["glm-4", "glm-4-plus", "glm-4-air", "glm-4-flash", "glm-4v", "glm-4-long"]:
+                    for m in [
+                        "glm-4",
+                        "glm-4-plus",
+                        "glm-4-air",
+                        "glm-4-flash",
+                        "glm-4v",
+                        "glm-4-long",
+                    ]:
                         models.append({"id": m, "name": m, "description": "Zhipu AI"})
                 elif profile.provider == "openai" or profile.api_format == "openai":
                     for m in ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]:
                         models.append({"id": m, "name": m, "description": "OpenAI compatible"})
-            return jsonify({"models": models, "current": profile.last_model or profile.default_model})
+            return jsonify(
+                {"models": models, "current": profile.last_model or profile.default_model}
+            )
         except Exception as e:
             log.error(f"Error getting models: {e}")
             return jsonify({"error": str(e)}), 500
@@ -84,7 +98,9 @@ def register_routes(app):
         try:
             settings = load_settings()
             profile_name, profile = settings.resolve_profile()
-            return jsonify({"model": profile.last_model or profile.default_model, "profile": profile_name})
+            return jsonify(
+                {"model": profile.last_model or profile.default_model, "profile": profile_name}
+            )
         except Exception as e:
             log.error(f"Error getting model: {e}")
             return jsonify({"error": str(e)}), 500

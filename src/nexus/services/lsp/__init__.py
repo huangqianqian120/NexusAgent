@@ -87,7 +87,9 @@ def find_references(
     pattern = re.compile(rf"\b{re.escape(target)}\b")
     matches: list[tuple[Path, int, str]] = []
     for candidate in iter_python_files(root):
-        for lineno, raw_line in enumerate(candidate.read_text(encoding="utf-8").splitlines(), start=1):
+        for lineno, raw_line in enumerate(
+            candidate.read_text(encoding="utf-8").splitlines(), start=1
+        ):
             if pattern.search(raw_line):
                 matches.append((candidate, lineno, raw_line.strip()))
     return matches
