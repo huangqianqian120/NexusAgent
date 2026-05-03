@@ -2,7 +2,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-≥3.10-blue?logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
+  <a href="https://github.com/huangqianqian120/NexusAgent/actions/workflows/ci.yml"><img src="https://github.com/huangqianqian120/NexusAgent/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
+  <img src="https://img.shields.io/badge/tests-265%20passed-green" alt="Tests">
 </p>
 
 **NexusAgent** 是基于 Claude Code 架构的开源 AI Agent 开发框架，在原版基础上增强了记忆管理、技能系统和 Web 可观测性。
@@ -128,21 +130,62 @@ NexusAgent 实现了完整的 Agent Harness 模式：
 ```
 NexusAgent/
 ├── src/nexus/              # 核心 Python 包
-│   ├── memory/             # 记忆系统（新增双层模型）
-│   ├── skills/             # 技能系统
-│   ├── tools/              # 工具注册表
-│   ├── services/           # 会话、压缩等服务
-│   ├── coordinator/        # Agent 协调器
+│   ├── memory/             # 记忆系统（双层模型）
+│   ├── skills/             # 技能系统（兼容 anthropics/skills）
+│   ├── tools/              # 工具注册表（43+ 工具）
+│   ├── services/compact/   # 紧凑压缩（微压缩 + 全量压缩 + 辅助函数）
+│   ├── web/                # Web 服务端
+│   │   └── routes/         # API 路由（内存/会话/技能/工具/Provider）
 │   ├── swarm/              # 多 Agent 协作
-│   └── web/                # Web 服务端（新增）
-├── frontend/web/           # React 前端（新增）
+│   ├── mcp/                # MCP 协议客户端
+│   └── channels/           # IM 渠道集成（Slack/Telegram/Discord/飞书）
+├── frontend/web/           # React 前端
 │   └── src/
 │       ├── components/     # UI 组件
 │       ├── hooks/          # WebSocket 等 Hooks
 │       └── lib/            # API 客户端
-└── scripts/                # 安装脚本
+├── tests/                  # 测试（265 用例）
+├── scripts/                # 安装 & E2E 脚本
+└── .github/workflows/      # CI 流水线（ruff + pytest 矩阵）
 ```
 
+
+## 开发
+
+### 环境配置
+
+```bash
+# 安装依赖（含开发工具）
+uv sync --extra dev
+
+# 安装 pre-commit hooks
+pre-commit install
+```
+
+### 代码质量
+
+```bash
+# 代码检查
+uv run ruff check src/ tests/ scripts/
+
+# 代码格式化
+uv run ruff format src/ tests/ scripts/
+
+# 类型检查
+uv run mypy src/
+```
+
+### 运行测试
+
+```bash
+# 全部测试（265 个用例）
+uv run pytest tests/ -v
+
+# 指定模块
+uv run pytest tests/test_compact.py -v
+```
+
+CI 会在 push 到 main 分支时自动运行 ruff 检查和 Python 3.10/3.11/3.12 测试矩阵。
 
 ## 鸣谢
 
