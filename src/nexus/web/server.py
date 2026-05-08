@@ -741,9 +741,9 @@ except ImportError as e:
 def serve_frontend(path: str):
     """提供前端 SPA 静态文件，非 API 路径统一返回 index.html"""
     if not _frontend_dist.is_dir():
-        return jsonify({
-            "error": "前端构建产物未找到，请运行: cd frontend/web && npm run build"
-        }), 404
+        return jsonify(
+            {"error": "前端构建产物未找到，请运行: cd frontend/web && npm run build"}
+        ), 404
 
     if path:
         file_path = _frontend_dist / path
@@ -765,7 +765,9 @@ def serve_frontend(path: str):
 # ---- Server entry points ----
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8765, debug: bool = False, production: bool = False):
+def run_server(
+    host: str = "0.0.0.0", port: int = 8765, debug: bool = False, production: bool = False
+):
     """
     启动 NexusAgent Web 服务器。
 
@@ -774,7 +776,11 @@ def run_server(host: str = "0.0.0.0", port: int = 8765, debug: bool = False, pro
                     也可通过环境变量 NEXUS_PRODUCTION=true 控制。
                     Flask-SocketIO 自动检测 eventlet/gevent 以支持 WebSocket。
     """
-    _production = production or os.environ.get("NEXUS_PRODUCTION", "").lower() in ("1", "true", "yes")
+    _production = production or os.environ.get("NEXUS_PRODUCTION", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
 
     if _production:
         log.info("启动生产服务器 → http://%s:%s", host, port)

@@ -107,7 +107,11 @@ def deduct_credits(
 
     if user.credits_balance < float(cost_credits):
         session.close()
-        return False, f"Credits 余额不足（需要 {cost_credits:.4f}，当前 {float(user.credits_balance):.4f}）", 0.0
+        return (
+            False,
+            f"Credits 余额不足（需要 {cost_credits:.4f}，当前 {float(user.credits_balance):.4f}）",
+            0.0,
+        )
 
     # 扣费
     user.credits_balance = float(user.credits_balance) - float(cost_credits)
@@ -191,7 +195,10 @@ def check_balance_enough(user_id: int, estimated_cost: float) -> tuple[bool, str
     if not user:
         return False, "用户不存在"
     if float(user.credits_balance) < estimated_cost:
-        return False, f"余额不足（需要 ~{estimated_cost:.4f}，当前 {float(user.credits_balance):.4f}）"
+        return (
+            False,
+            f"余额不足（需要 ~{estimated_cost:.4f}，当前 {float(user.credits_balance):.4f}）",
+        )
     return True, "余额充足"
 
 
@@ -245,7 +252,11 @@ def charge_uniform(
 
     log.info(
         "统一扣费: user_id=%d input=%d output=%d total=%d cost=%.6f credits",
-        user_id, input_tokens, output_tokens, total_tokens, cost_credits,
+        user_id,
+        input_tokens,
+        output_tokens,
+        total_tokens,
+        cost_credits,
     )
     return True, "扣费成功", cost_credits
 

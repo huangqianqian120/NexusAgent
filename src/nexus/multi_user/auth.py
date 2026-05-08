@@ -13,7 +13,10 @@ import jwt
 _secret_key = os.environ.get("MULTI_USER_SECRET_KEY") or os.environ.get("SECRET_KEY")
 if not _secret_key:
     import logging
-    logging.warning("未设置 MULTI_USER_SECRET_KEY，系统自动生成随机密钥（重启后会失效，请设置环境变量）")
+
+    logging.warning(
+        "未设置 MULTI_USER_SECRET_KEY，系统自动生成随机密钥（重启后会失效，请设置环境变量）"
+    )
     _secret_key = secrets.token_hex(32)
 _jwt_expiry_hours = int(os.environ.get("JWT_EXPIRY_HOURS", "24"))
 

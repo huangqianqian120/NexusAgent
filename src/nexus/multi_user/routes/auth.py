@@ -29,9 +29,7 @@ def register():
 
     session = get_session()
     # 检查邮箱是否已注册
-    existing = session.exec(
-        select(User).where(User.email == email)
-    ).first()
+    existing = session.exec(select(User).where(User.email == email)).first()
     if existing:
         session.close()
         return jsonify({"error": "该邮箱已被注册"}), 409
@@ -54,17 +52,19 @@ def register():
     session.close()
 
     token = create_jwt(user_id, user_email, user_is_admin)
-    return jsonify({
-        "message": "注册成功",
-        "user": {
-            "id": user_id,
-            "email": user_email,
-            "username": username,
-            "is_admin": user_is_admin,
-            "credits_balance": str(user_credits),
-        },
-        "token": token,
-    }), 201
+    return jsonify(
+        {
+            "message": "注册成功",
+            "user": {
+                "id": user_id,
+                "email": user_email,
+                "username": username,
+                "is_admin": user_is_admin,
+                "credits_balance": str(user_credits),
+            },
+            "token": token,
+        }
+    ), 201
 
 
 @bp.route("/login", methods=["POST"])
@@ -93,6 +93,7 @@ def login():
 
     # 更新最后登录时间并提取用户信息（在 session 关闭前提取）
     from datetime import datetime
+
     user.last_login_at = datetime.utcnow()
     session.commit()
     user_id = user.id
@@ -102,16 +103,18 @@ def login():
     session.close()
 
     token = create_jwt(user_id, user_email, user_is_admin)
-    return jsonify({
-        "user": {
-            "id": user_id,
-            "email": user_email,
-            "username": user.username,
-            "is_admin": user_is_admin,
-            "credits_balance": str(user_credits),
-        },
-        "token": token,
-    })
+    return jsonify(
+        {
+            "user": {
+                "id": user_id,
+                "email": user_email,
+                "username": user.username,
+                "is_admin": user_is_admin,
+                "credits_balance": str(user_credits),
+            },
+            "token": token,
+        }
+    )
 
 
 @bp.route("/me", methods=["GET"])
@@ -129,16 +132,18 @@ def me():
     if not user or not user.is_active:
         return jsonify({"error": "用户不存在或已禁用"}), 404
 
-    return jsonify({
-        "id": user.id,
-        "email": user.email,
-        "username": user.username,
-        "is_admin": user.is_admin,
-        "is_active": user.is_active,
-        "credits_balance": str(user.credits_balance),
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-        "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
-    })
+    return jsonify(
+        {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "is_admin": user.is_admin,
+            "is_active": user.is_active,
+            "credits_balance": str(user.credits_balance),
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+        }
+    )
 
 
 @bp.route("/logout", methods=["POST"])

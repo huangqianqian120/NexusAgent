@@ -22,7 +22,11 @@ if str(_project_root) not in os.sys.path:
     os.sys.path.insert(1, str(_project_root))
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("MULTI_USER_SECRET_KEY") or os.environ.get("SECRET_KEY") or "nexus-multi-user-dev"
+app.config["SECRET_KEY"] = (
+    os.environ.get("MULTI_USER_SECRET_KEY")
+    or os.environ.get("SECRET_KEY")
+    or "nexus-multi-user-dev"
+)
 
 # CORS（同源部署）
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -57,11 +61,13 @@ def my_credits():
     if not user:
         return jsonify({"error": "用户不存在"}), 404
 
-    return jsonify({
-        "credits_balance": str(user.credits_balance),
-        "email": user.email,
-        "username": user.username,
-    })
+    return jsonify(
+        {
+            "credits_balance": str(user.credits_balance),
+            "email": user.email,
+            "username": user.username,
+        }
+    )
 
 
 @app.route("/api/user/credits/history", methods=["GET"])
@@ -81,28 +87,32 @@ def my_credits_history():
     offset = (page - 1) * page_size
 
     session = get_session()
-    query = select(CreditTransaction).where(
-        CreditTransaction.user_id == user_id
-    ).order_by(CreditTransaction.created_at.desc())
+    query = (
+        select(CreditTransaction)
+        .where(CreditTransaction.user_id == user_id)
+        .order_by(CreditTransaction.created_at.desc())
+    )
 
     txs = session.exec(query.offset(offset).limit(page_size)).all()
     session.close()
 
-    return jsonify({
-        "transactions": [
-            {
-                "id": t.id,
-                "amount": str(t.amount),
-                "balance_after": str(t.balance_after),
-                "transaction_type": t.transaction_type,
-                "description": t.description,
-                "model": t.model,
-                "cost_usd": t.cost_usd,
-                "created_at": t.created_at.isoformat() if t.created_at else None,
-            }
-            for t in txs
-        ]
-    })
+    return jsonify(
+        {
+            "transactions": [
+                {
+                    "id": t.id,
+                    "amount": str(t.amount),
+                    "balance_after": str(t.balance_after),
+                    "transaction_type": t.transaction_type,
+                    "description": t.description,
+                    "model": t.model,
+                    "cost_usd": t.cost_usd,
+                    "created_at": t.created_at.isoformat() if t.created_at else None,
+                }
+                for t in txs
+            ]
+        }
+    )
 
 
 # ---- 注册多用户路由 ----
@@ -130,6 +140,7 @@ def run_server(host: str = "0.0.0.0", port: int = 8766, debug: bool = False):
 
     # 初始化默认模型定价
     from nexus.multi_user.credits import init_default_pricing
+
     init_default_pricing()
 
     log.info("启动 NexusAgent 多用户服务 → http://%s:%s", host, port)
@@ -141,6 +152,7 @@ def run_server(host: str = "0.0.0.0", port: int = 8766, debug: bool = False):
     log.info("  POST /api/admin/credits/allocate - 分配 Credits（管理员）")
 
     from flask_socketio import SocketIO
+
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading", logger=False)
     socketio.run(app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)
 
@@ -149,6 +161,7 @@ def create_app() -> Flask:
     """创建并配置 Flask app（用于 gunicorn 等生产服务器）."""
     create_all_tables()
     from nexus.multi_user.credits import init_default_pricing
+
     init_default_pricing()
     return app
 

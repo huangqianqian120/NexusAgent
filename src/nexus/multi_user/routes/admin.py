@@ -26,24 +26,26 @@ def list_users():
     users = session.exec(select(User).offset(offset).limit(page_size)).all()
     session.close()
 
-    return jsonify({
-        "users": [
-            {
-                "id": u.id,
-                "email": u.email,
-                "username": u.username,
-                "is_admin": u.is_admin,
-                "is_active": u.is_active,
-                "credits_balance": str(u.credits_balance),
-                "created_at": u.created_at.isoformat() if u.created_at else None,
-                "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
-            }
-            for u in users
-        ],
-        "total": len(total),
-        "page": page,
-        "page_size": page_size,
-    })
+    return jsonify(
+        {
+            "users": [
+                {
+                    "id": u.id,
+                    "email": u.email,
+                    "username": u.username,
+                    "is_admin": u.is_admin,
+                    "is_active": u.is_active,
+                    "credits_balance": str(u.credits_balance),
+                    "created_at": u.created_at.isoformat() if u.created_at else None,
+                    "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+                }
+                for u in users
+            ],
+            "total": len(total),
+            "page": page,
+            "page_size": page_size,
+        }
+    )
 
 
 @bp.route("/users", methods=["POST"])
@@ -80,15 +82,17 @@ def create_user():
     session.refresh(user)
     session.close()
 
-    return jsonify({
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "username": user.username,
-            "is_admin": user.is_admin,
-            "credits_balance": str(user.credits_balance),
+    return jsonify(
+        {
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "is_admin": user.is_admin,
+                "credits_balance": str(user.credits_balance),
+            }
         }
-    }), 201
+    ), 201
 
 
 @bp.route("/users/<int:user_id>", methods=["GET"])
@@ -102,16 +106,18 @@ def get_user(user_id: int):
     if not user:
         return jsonify({"error": "用户不存在"}), 404
 
-    return jsonify({
-        "id": user.id,
-        "email": user.email,
-        "username": user.username,
-        "is_admin": user.is_admin,
-        "is_active": user.is_active,
-        "credits_balance": str(user.credits_balance),
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-        "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
-    })
+    return jsonify(
+        {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "is_admin": user.is_admin,
+            "is_active": user.is_active,
+            "credits_balance": str(user.credits_balance),
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+        }
+    )
 
 
 @bp.route("/users/<int:user_id>/toggle-active", methods=["POST"])
@@ -181,12 +187,14 @@ def allocate_credits():
     tx_id = tx.id
     session.close()
 
-    return jsonify({
-        "user_id": user_id,
-        "amount": str(amount),
-        "balance_after": str(new_balance),
-        "transaction_id": tx_id,
-    })
+    return jsonify(
+        {
+            "user_id": user_id,
+            "amount": str(amount),
+            "balance_after": str(new_balance),
+            "transaction_id": tx_id,
+        }
+    )
 
 
 @bp.route("/credits/transactions", methods=["GET"])
@@ -207,27 +215,29 @@ def list_transactions():
     total = len(session.exec(query).all())
     session.close()
 
-    return jsonify({
-        "transactions": [
-            {
-                "id": t.id,
-                "user_id": t.user_id,
-                "amount": str(t.amount),
-                "balance_after": str(t.balance_after),
-                "transaction_type": t.transaction_type,
-                "description": t.description,
-                "model": t.model,
-                "input_tokens": t.input_tokens,
-                "output_tokens": t.output_tokens,
-                "cost_usd": t.cost_usd,
-                "created_at": t.created_at.isoformat() if t.created_at else None,
-            }
-            for t in txs
-        ],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    })
+    return jsonify(
+        {
+            "transactions": [
+                {
+                    "id": t.id,
+                    "user_id": t.user_id,
+                    "amount": str(t.amount),
+                    "balance_after": str(t.balance_after),
+                    "transaction_type": t.transaction_type,
+                    "description": t.description,
+                    "model": t.model,
+                    "input_tokens": t.input_tokens,
+                    "output_tokens": t.output_tokens,
+                    "cost_usd": t.cost_usd,
+                    "created_at": t.created_at.isoformat() if t.created_at else None,
+                }
+                for t in txs
+            ],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
+    )
 
 
 @bp.route("/users/<int:user_id>/credits/transactions", methods=["GET"])
@@ -239,33 +249,37 @@ def get_user_transactions(user_id: int):
     offset = (page - 1) * page_size
 
     session = get_session()
-    query = select(CreditTransaction).where(
-        CreditTransaction.user_id == user_id
-    ).order_by(CreditTransaction.created_at.desc())
+    query = (
+        select(CreditTransaction)
+        .where(CreditTransaction.user_id == user_id)
+        .order_by(CreditTransaction.created_at.desc())
+    )
 
     txs = session.exec(query.offset(offset).limit(page_size)).all()
     total = len(session.exec(query).all())
     session.close()
 
-    return jsonify({
-        "user_id": user_id,
-        "transactions": [
-            {
-                "id": t.id,
-                "amount": str(t.amount),
-                "balance_after": str(t.balance_after),
-                "transaction_type": t.transaction_type,
-                "description": t.description,
-                "model": t.model,
-                "cost_usd": t.cost_usd,
-                "created_at": t.created_at.isoformat() if t.created_at else None,
-            }
-            for t in txs
-        ],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    })
+    return jsonify(
+        {
+            "user_id": user_id,
+            "transactions": [
+                {
+                    "id": t.id,
+                    "amount": str(t.amount),
+                    "balance_after": str(t.balance_after),
+                    "transaction_type": t.transaction_type,
+                    "description": t.description,
+                    "model": t.model,
+                    "cost_usd": t.cost_usd,
+                    "created_at": t.created_at.isoformat() if t.created_at else None,
+                }
+                for t in txs
+            ],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
+    )
 
 
 @bp.route("/users/<int:user_id>/reset-password", methods=["POST"])
