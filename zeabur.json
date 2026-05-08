@@ -1,0 +1,40 @@
+{
+  "$schema": "https://zeabur.com/schema.json",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "env": {
+    "SECRET_KEY": {
+      "description": "Flask 密钥，用于会话安全",
+      "required": true
+    },
+    "MULTI_USER_SECRET_KEY": {
+      "description": "JWT 认证密钥，请使用不同于 SECRET_KEY 的值",
+      "required": true
+    },
+    "ANTHROPIC_API_KEY": {
+      "description": "Anthropic API Key（Claude）"
+    },
+    "OPENAI_API_KEY": {
+      "description": "OpenAI API Key"
+    },
+    "OPENAI_BASE_URL": {
+      "description": "OpenAI 兼容 API 端点"
+    },
+    "OPENAI_MODEL": {
+      "description": "默认使用的模型"
+    },
+    "UNIFORM_CREDITS_PER_1K": {
+      "description": "统一 Credits 单价（每1000 tokens），默认 0.001",
+      "default": "0.001"
+    }
+  },
+  "ports": {
+    "8765": {
+      "description": "主服务端口",
+      "type": "http"
+    }
+  },
+  "regions": ["sinapore", "tokyo", "frankfurt"],
+  "runtime": "container"
+}

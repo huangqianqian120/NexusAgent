@@ -55,6 +55,7 @@ interface UseWebSocketReturn {
   clearQuestionRequest: () => void;
   resumeSession: (sessionId: string) => void;
   disconnect: () => void;
+  onCreditsUpdate?: (newBalance: string) => void;
 }
 
 // 创建 Socket.IO 连接并绑定事件处理器
@@ -65,12 +66,20 @@ function createSocket(
     onEvent: (event: BackendEvent) => void;
   }
 ): Socket {
+  // 从 localStorage 获取 token 并传递给 Socket.IO
+  const token = localStorage.getItem('nexus_token');
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const socket = io(url, {
-    transports: ['polling', 'websocket'],
+    transports: ['polling'],  // threading 模式不支持 WebSocket，强制 polling
     reconnection: true,
     reconnectionAttempts: 10,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
+    extraHeaders: headers,
   });
 
   socket.on('connect', () => handlers.onConnect(socket));
@@ -106,7 +115,7 @@ function createSocket(
   return socket;
 }
 
-export function useWebSocket(url: string): UseWebSocketReturn {
+export function useWebSocket(url: string, onCreditsUpdate?: (newBalance: string) => void): UseWebSocketReturn {
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
   const [status, setStatus] = useState<AppState | null>(null);
   const [ready, setReady] = useState(false);
@@ -255,6 +264,16 @@ export function useWebSocket(url: string): UseWebSocketReturn {
           setStatus({ ...status, permission_mode: event.plan_mode });
         }
         break;
+
+      case 'credits_update':
+        // Credits 余额变化通知
+        if (event.credits_balance) {
+          if (socketRef.current) {
+            socketRef.current.emit('credits_update', { balance: event.credits_balance });
+          }
+          onCreditsUpdate?.(event.credits_balance);
+        }
+        break;
     }
   }, []);
 
@@ -277,12 +296,27 @@ export function useWebSocket(url: string): UseWebSocketReturn {
 
     socket.on('reconnect_failed', () => setReconnecting(false));
 
-    socket.on('connect_error', () => {
+    socket.on('connect_error', (_err: Error) => {
       // 连接错误由 reconnect 机制处理
     });
 
-    socket.on('error', () => {
-      // Socket 级别错误
+    socket.on('error', (data: { message?: string }) => {
+      // 服务端返回的错误（如未登录）
+      if (data?.message) {
+        setReady(false);
+        setBusy(false);
+        setThinking(false);
+        const errorText = data.message;
+        setTranscript((prev) => [
+          ...prev,
+          {
+            role: 'system',
+            text: errorText,
+            is_error: true,
+            timestamp: Date.now(),
+          },
+        ]);
+      }
     });
 
     socketRef.current = socket;

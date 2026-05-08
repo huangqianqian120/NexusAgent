@@ -96,6 +96,7 @@ dmypy.json
 *.log
 *.tmp
 .temp/
+.nexus_pids
 
 # Web build outputs
 frontend/web/dist/

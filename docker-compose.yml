@@ -1,0 +1,28 @@
+services:
+  nexus-agent:
+    build: .
+    ports:
+      - "${PORT:-8765}:8765"
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - NEXUS_PRODUCTION=true
+      # LLM API 密钥（根据需要设置）
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-}
+    volumes:
+      # 持久化配置和数据
+      - nexus-workspace:/root/.personal_agent
+      - nexus-config:/root/.config/nexus
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/api/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  nexus-workspace:
+  nexus-config:

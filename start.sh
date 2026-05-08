@@ -16,18 +16,21 @@ FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 CORS_ORIGINS="${CORS_ORIGINS:-http://localhost:${FRONTEND_PORT},http://localhost:5173,http://localhost:3000}"
 HEALTH_CHECK_TIMEOUT="${HEALTH_CHECK_TIMEOUT:-30}"
 DAEMON_MODE=false
+PRODUCTION_MODE=false
 
 usage() {
     echo "用法: $0 [选项]"
     echo ""
     echo "选项:"
     echo "  -d, --daemon     后台模式运行"
+    echo "  -p, --production 生产模式（Flask 提供前端静态文件，无需 Vite dev server）"
     echo "  -h, --help       显示帮助"
     echo ""
     echo "环境变量:"
     echo "  PORT             后端端口 (默认: 8765)"
-    echo "  FRONTEND_PORT    前端端口 (默认: 5173)"
+    echo "  FRONTEND_PORT    前端端口 (默认: 5173，仅开发模式)"
     echo "  HEALTH_CHECK_TIMEOUT  健康检查超时秒数 (默认: 30)"
+    echo "  NEXUS_PRODUCTION  设为 true 启用 waitress 生产服务器"
     exit 0
 }
 
@@ -35,6 +38,7 @@ usage() {
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -d|--daemon) DAEMON_MODE=true; shift ;;
+        -p|--production) PRODUCTION_MODE=true; shift ;;
         -h|--help) usage ;;
         *) echo -e "${RED}未知参数: $1${NC}"; usage ;;
     esac
@@ -59,7 +63,12 @@ fi
 
 echo -e "${YELLOW}配置信息:${NC}"
 echo "  后端端口: $BACKEND_PORT"
-echo "  前端端口: $FRONTEND_PORT"
+if [ "$PRODUCTION_MODE" = true ]; then
+    echo "  模式: 生产（Flask 直接提供前端静态文件）"
+else
+    echo "  前端端口: $FRONTEND_PORT"
+    echo "  模式: 开发（Vite dev server + Flask 后端）"
+fi
 
 # 检查端口是否已被监听（兼容无 lsof 的系统）
 _is_port_in_use() {
@@ -128,7 +137,54 @@ if ! require_free_port $BACKEND_PORT "BACKEND"; then
     exit 1
 fi
 
-# 如果前端端口被占用，自动尝试下一个端口
+# 生产模式：仅后端（Flask 直接提供前端静态文件）
+if [ "$PRODUCTION_MODE" = true ]; then
+    # 检查前端构建产物
+    if [ ! -f "frontend/web/dist/index.html" ]; then
+        echo -e "${YELLOW}前端构建产物不存在，正在构建...${NC}"
+        cd frontend/web && npm run build && cd ../..
+        if [ ! -f "frontend/web/dist/index.html" ]; then
+            echo -e "${RED}前端构建失败，终止${NC}"
+            exit 1
+        fi
+    fi
+
+    echo -e "${YELLOW}启动后端（生产模式）...${NC}"
+    NEXUS_PRODUCTION=true CORS_ORIGINS="$CORS_ORIGINS" uv run python -m nexus.web.server &
+    BACKEND_PID=$!
+    echo -e "${GREEN}后端 PID: $BACKEND_PID${NC}"
+
+    # 健康检查等待后端就绪
+    if ! wait_for_backend $BACKEND_PORT $HEALTH_CHECK_TIMEOUT; then
+        echo -e "${RED}后端启动超时，终止${NC}"
+        kill $BACKEND_PID 2>/dev/null
+        exit 1
+    fi
+
+    # 保存 PID（仅后端）
+    echo "$BACKEND_PID" > "$PID_FILE"
+
+    echo ""
+    echo -e "${GREEN}========================================${NC}"
+    echo -e "${GREEN}NexusAgent 已成功启动（生产模式）！${NC}"
+    echo -e "${GREEN}========================================${NC}"
+    echo ""
+    echo "  Web UI + API: http://localhost:$BACKEND_PORT"
+    echo ""
+
+    if [ "$DAEMON_MODE" = true ]; then
+        echo -e "${YELLOW}后台模式运行中。使用 ./stop.sh 或 kill $BACKEND_PID 停止${NC}"
+        disown $BACKEND_PID 2>/dev/null
+        exit 0
+    fi
+
+    echo -e "${YELLOW}按 Ctrl+C 停止服务${NC}"
+    trap cleanup SIGINT SIGTERM
+    wait
+    exit 0
+fi
+
+# 开发模式：前端端口检查 + 前后端分别启动
 while ! require_free_port $FRONTEND_PORT "FRONTEND" 2>/dev/null; do
     echo -e "${YELLOW}端口 $FRONTEND_PORT 已被占用，尝试 $((FRONTEND_PORT + 1))${NC}"
     FRONTEND_PORT=$((FRONTEND_PORT + 1))

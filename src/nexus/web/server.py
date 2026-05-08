@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import queue
+import secrets as _secrets
 import sys
 import threading
 from pathlib import Path
@@ -19,7 +20,10 @@ _project_root = _server_file.parent.parent.parent.parent
 if str(_project_root) not in sys.path:
     sys.path.insert(1, str(_project_root))
 
-from flask import Flask, jsonify, request
+# 前端构建产物目录
+_frontend_dist = _project_root / "frontend" / "web" / "dist"
+
+from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 
@@ -42,40 +46,44 @@ from nexus.web.web_backend_host import WebBackendHost, WebBackendHostConfig
 
 log = logging.getLogger(__name__)
 
+# SECRET_KEY：优先使用环境变量，否则随机生成（每次重启会话失效）
 _secret_key = os.environ.get("SECRET_KEY")
-_cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
-
 if not _secret_key:
-    import warnings
-
-    warnings.warn(
-        "SECRET_KEY not set via environment variable. "
-        "Using a predictable default is insecure for production. "
-        "Set SECRET_KEY environment variable for production deployments.",
-        UserWarning,
+    _secret_key = _secrets.token_hex(32)
+    log.warning(
+        "SECRET_KEY 未设置，已为此会话生成随机密钥。"
+        "服务器重启后所有现有会话将失效。"
+        "生产环境请设置环境变量 SECRET_KEY。"
+        "生成永久密钥: python3 -c 'import secrets; print(secrets.token_hex(32))'"
     )
-    _secret_key = "nexus-web-dev-secret-do-not-use-in-production"
 
-# Create Flask app
+# CORS：仅当显式设置 CORS_ORIGINS 时启用（同源部署无需 CORS）
+_cors_origins = os.environ.get("CORS_ORIGINS", "").strip()
+
+# Create Flask app（不使用 static_folder 以避免与 SPA catch-all 路由冲突）
 app = Flask(__name__)
 app.config["SECRET_KEY"] = _secret_key
-app.config["CORS_ALLOWED_ORIGINS"] = _cors_origins
 
-# Enable CORS only for specified origins
-_allowed_origins = [o.strip() for o in _cors_origins.split(",") if o.strip()]
-CORS(
-    app,
-    resources={
-        r"/api/*": {"origins": _allowed_origins},
-        r"/socket.io/*": {"origins": _allowed_origins},
-    },
-)
+if _cors_origins:
+    _allowed_origins = [o.strip() for o in _cors_origins.split(",") if o.strip()]
+    CORS(
+        app,
+        resources={
+            r"/api/*": {"origins": _allowed_origins},
+            r"/socket.io/*": {"origins": _allowed_origins},
+        },
+    )
+    log.info("CORS 已启用，允许来源: %s", _allowed_origins)
+else:
+    _allowed_origins = []
+    log.info("CORS 未启用（同源部署模式，无需跨域配置）")
 
-# Create SocketIO instance
+# Create SocketIO instance（默认 threading 模式，可通过 SOCKETIO_ASYNC_MODE 切换为 eventlet）
+_socketio_async_mode = os.environ.get("SOCKETIO_ASYNC_MODE", "threading")
 socketio = SocketIO(
     app,
     cors_allowed_origins=_allowed_origins,
-    async_mode="threading",
+    async_mode=_socketio_async_mode,
     logger=False,
     engineio_logger=False,
 )
@@ -84,6 +92,17 @@ socketio = SocketIO(
 active_sessions: dict[str, Any] = {}
 
 PROTOCOL_PREFIX = "OHJSON:"
+
+
+def _get_user_id_from_request() -> int | None:
+    """从当前请求的 Authorization header 中提取用户 ID."""
+    from nexus.multi_user.auth import extract_user_from_header
+
+    auth_header = request.headers.get("Authorization")
+    user = extract_user_from_header(auth_header)
+    if user:
+        return user.get("user_id")
+    return None
 
 
 class SocketIOWebAdapter:
@@ -281,6 +300,37 @@ class SocketIOBackendHost(WebBackendHost):
                     )
                 )
                 await self._emit(BackendEvent.tasks_snapshot(get_task_manager().list_tasks()))
+
+                # 统一扣费（不区分模型）
+                if self._config.user_id and event.usage:
+                    try:
+                        from nexus.multi_user.credits import charge_uniform
+                        from nexus.multi_user.db import get_session
+                        from nexus.multi_user.models import User
+
+                        ok, msg, amount = charge_uniform(
+                            user_id=self._config.user_id,
+                            input_tokens=event.usage.input_tokens,
+                            output_tokens=event.usage.output_tokens,
+                            model_id=self._config.model or "",
+                            description="AI 对话消耗",
+                        )
+                        if ok:
+                            # 通知前端余额变化
+                            session = get_session()
+                            user = session.get(User, self._config.user_id)
+                            new_balance = str(float(user.credits_balance)) if user else "0"
+                            session.close()
+                            await self._emit(
+                                BackendEvent(
+                                    type="credits_update",
+                                    message=f"-{amount:.6f}",
+                                    user_id=self._config.user_id,
+                                    credits_balance=new_balance,
+                                )
+                            )
+                    except Exception as e:
+                        log.warning("Credits 扣费失败: %s", e)
                 return
             if isinstance(event, ToolExecutionStarted):
                 self._last_tool_inputs[event.tool_name] = event.tool_input or {}
@@ -619,9 +669,20 @@ def handle_message(data):
 def handle_session_start(data):
     session_id = request.sid
     log.info(f"Starting session: {session_id}")
+
+    # 从请求中获取当前用户 ID
+    user_id = _get_user_id_from_request()
+    if not user_id:
+        log.warning("未登录用户尝试启动会话: %s", session_id)
+        emit("error", {"message": "请先登录"})
+        return
+
+    log.info(f"Session user_id: {user_id}")
+
     adapter = SocketIOWebAdapter(socketio, session_id)
     active_sessions[session_id] = adapter
     config = get_config()
+    config.user_id = user_id
     host = SocketIOBackendHost(adapter, config)
     asyncio.run(host.run())
 
@@ -631,9 +692,12 @@ def handle_session_resume(data):
     session_id = request.sid
     session_to_resume = data.get("session_id")
     log.info(f"Resuming session: {session_to_resume} for socket {session_id}")
+
+    user_id = _get_user_id_from_request()
     adapter = SocketIOWebAdapter(socketio, session_id)
     active_sessions[session_id] = adapter
     config = get_config()
+    config.user_id = user_id
     from nexus.services.session_backend import DEFAULT_SESSION_BACKEND
     import os
 
@@ -652,13 +716,75 @@ from nexus.web.routes import register_all_routes
 
 register_all_routes(app)
 
+# ---- 注册多用户认证路由 ----
+# 在 SPA catch-all 之前注册，避免路由冲突
+
+try:
+    from nexus.multi_user.db import create_all_tables
+    from nexus.multi_user.credits import init_default_pricing
+    from nexus.multi_user.routes import auth_bp, admin_bp
+
+    create_all_tables()
+    init_default_pricing()
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
+    log.info("多用户认证路由已注册")
+except ImportError as e:
+    log.warning("多用户路由导入失败: %s", e)
+
+
+# ---- SPA 前端静态文件服务（必须位于所有 API 路由之后）----
+
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_frontend(path: str):
+    """提供前端 SPA 静态文件，非 API 路径统一返回 index.html"""
+    if not _frontend_dist.is_dir():
+        return jsonify({
+            "error": "前端构建产物未找到，请运行: cd frontend/web && npm run build"
+        }), 404
+
+    if path:
+        file_path = _frontend_dist / path
+        # 路径穿越防护
+        try:
+            resolved = file_path.resolve()
+            if not str(resolved).startswith(str(_frontend_dist.resolve())):
+                return jsonify({"error": "禁止访问"}), 403
+        except (ValueError, OSError):
+            return jsonify({"error": "无效路径"}), 400
+
+        if file_path.is_file():
+            return send_from_directory(str(_frontend_dist), path)
+
+    # SPA fallback：所有非 API 路径返回 index.html
+    return send_file(str(_frontend_dist / "index.html"))
+
 
 # ---- Server entry points ----
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8765, debug: bool = False):
-    """Run the Flask-SocketIO server."""
-    log.info(f"Starting NexusAgent Web UI server on {host}:{port}")
+def run_server(host: str = "0.0.0.0", port: int = 8765, debug: bool = False, production: bool = False):
+    """
+    启动 NexusAgent Web 服务器。
+
+    参数:
+        production: 为 True 时禁用 debug 模式并优化日志输出。
+                    也可通过环境变量 NEXUS_PRODUCTION=true 控制。
+                    Flask-SocketIO 自动检测 eventlet/gevent 以支持 WebSocket。
+    """
+    _production = production or os.environ.get("NEXUS_PRODUCTION", "").lower() in ("1", "true", "yes")
+
+    if _production:
+        log.info("启动生产服务器 → http://%s:%s", host, port)
+        if host == "0.0.0.0":
+            log.info("前端入口: http://localhost:%s/", port)
+        # Flask-SocketIO 自动检测 eventlet/gevent，无则使用 threading 模式
+        socketio.run(app, host=host, port=port, debug=False, allow_unsafe_werkzeug=True)
+        return
+
+    log.info("启动开发服务器 → http://%s:%s", host, port)
     socketio.run(app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)
 
 

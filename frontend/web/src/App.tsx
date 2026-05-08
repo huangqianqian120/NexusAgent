@@ -6,7 +6,6 @@ import { ChatView } from './components/ChatView';
 import { SelectModal } from './components/SelectModal';
 import { PermissionDialog } from './components/PermissionDialog';
 import { SessionPanel } from './components/SessionPanel';
-import { ModelSelector } from './components/ModelSelector';
 import { SkillsPanel } from './components/SkillsPanel';
 import { AgentPlayground } from './components/AgentPlayground';
 import { TasksPanel } from './components/TasksPanel';
@@ -14,22 +13,32 @@ import { MemoryPanel } from './components/MemoryPanel';
 import { AppHeader } from './components/AppHeader';
 import { AppSidebar } from './components/AppSidebar';
 import { AppSettings } from './components/AppSettings';
+import { AuthPage } from './components/AuthPage';
 import { getAllProfiles, switchProvider, type Provider } from './lib/api';
+import { getStoredUser, logout, type UserInfo } from './lib/auth';
 
-const WS_URL = `${window.location.protocol}//${window.location.hostname}:8765`;
+const WS_URL = window.location.origin;
 
 export function App() {
   const [theme, setTheme, toggleTheme] = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'settings' | 'playground'>('chat');
   const [showSessionPanel, setShowSessionPanel] = useState(false);
-  const [showModelSelector, setShowModelSelector] = useState(false);
   const [showSkillsPanel, setShowSkillsPanel] = useState(false);
   const [showTasksPanel, setShowTasksPanel] = useState(false);
   const [showMemoryPanel, setShowMemoryPanel] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>();
   const [profiles, setProfiles] = useState<Record<string, Provider>>({});
   const [switchingProfile, setSwitchingProfile] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
+
+  // 启动时检查登录状态
+  useEffect(() => {
+    const cached = getStoredUser();
+    if (cached) {
+      setCurrentUser(cached);
+    }
+  }, []);
 
   // 切换到 Settings 标签时拉取 Provider 列表
   useEffect(() => {
@@ -52,7 +61,10 @@ export function App() {
     clearSelectRequest,
     clearPermissionRequest,
     resumeSession,
-  } = useWebSocket(WS_URL);
+  } = useWebSocket(WS_URL, (newBalance: string) => {
+    // 收到余额更新通知时刷新用户信息
+    setCurrentUser(prev => prev ? { ...prev, credits_balance: newBalance } : null);
+  });
 
   const handleSend = useCallback(
     (message: string) => {
@@ -113,19 +125,25 @@ export function App() {
     handleCommandSelect('clear');
   }, [handleCommandSelect]);
 
-  const handleModelSwitched = useCallback(() => {
-    setShowModelSelector(false);
+  const handleLogout = useCallback(() => {
+    logout();
+    setCurrentUser(null);
   }, []);
+
+  // 未登录则显示登录页面
+  if (!currentUser) {
+    return <AuthPage onLoginSuccess={setCurrentUser} />;
+  }
 
   return (
     <div className="h-screen flex flex-col bg-[hsl(240,10%,3.9%)]">
       <AppHeader
-        status={status}
         ready={ready}
         reconnecting={reconnecting}
         theme={theme}
         toggleTheme={toggleTheme}
-        onOpenModelSelector={() => setShowModelSelector(true)}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -175,7 +193,6 @@ export function App() {
               onSwitchProfile={handleSwitchProfile}
               onSend={handleSend}
               onSetTheme={setTheme}
-              onOpenModelSelector={() => setShowModelSelector(true)}
               currentTheme={theme}
             />
           )}
@@ -210,14 +227,6 @@ export function App() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Model Selector Modal */}
-      {showModelSelector && (
-        <ModelSelector
-          onClose={() => setShowModelSelector(false)}
-          onModelSwitched={handleModelSwitched}
-        />
       )}
 
       {/* Skills Panel Modal */}

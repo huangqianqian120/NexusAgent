@@ -12,7 +12,6 @@ interface AppSettingsProps {
   onSwitchProfile: (profileName: string) => void;
   onSend: (message: string) => void;
   onSetTheme: (theme: Theme) => void;
-  onOpenModelSelector: () => void;
   currentTheme: string;
 }
 
@@ -25,21 +24,20 @@ export function AppSettings({
   onSwitchProfile,
   onSend,
   onSetTheme,
-  onOpenModelSelector,
   currentTheme,
 }: AppSettingsProps) {
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-2xl mx-auto space-y-6">
-        <h2 className="text-xl font-semibold text-[hsl(0,0%,98%)]">Settings</h2>
+        <h2 className="text-xl font-semibold text-[hsl(0,0%,98%)]">设置</h2>
 
-        {/* Provider & Model Card */}
+        {/* Provider & Model Card - 管理员可配置，用户仅查看 */}
         <div className="rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] p-6">
-          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">Provider & Model</h3>
+          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">当前配置</h3>
 
           {/* Provider Profiles */}
           <div className="space-y-2 mb-4">
-            <p className="text-xs text-[hsl(240,5%,64.9%)] uppercase tracking-wider">Provider Profiles</p>
+            <p className="text-xs text-[hsl(240,5%,64.9%)] uppercase tracking-wider">可用配置</p>
             {Object.values(profiles).map((profile, index) => (
               <button
                 key={profile.name || index}
@@ -57,18 +55,12 @@ export function AppSettings({
                     <span className="font-medium text-[hsl(0,0%,98%)]">{profile.label || profile.name}</span>
                     {!profile.configured && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400">
-                        Unconfigured
+                        未配置
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs text-[hsl(240,5%,64.9%)]">{profile.provider}</span>
-                    {profile.model && (
-                      <>
-                        <span className="text-xs text-[hsl(240,5%,64.9%)]">·</span>
-                        <span className="text-xs text-[hsl(168,100%,50%)]">{profile.model}</span>
-                      </>
-                    )}
                   </div>
                 </div>
                 {switchingProfile === profile.name ? (
@@ -81,30 +73,11 @@ export function AppSettings({
               </button>
             ))}
           </div>
-
-          {/* Current Model */}
-          <div className="flex items-center justify-between pt-4 border-t border-[hsl(240,3.7%,15.9%)]">
-            <div>
-              <p className="text-xs text-[hsl(240,5%,64.9%)]">当前模型</p>
-              <button
-                onClick={onOpenModelSelector}
-                className="text-sm font-medium text-[hsl(168,100%,50%)] hover:underline"
-              >
-                {status?.model || 'N/A'}
-              </button>
-            </div>
-            <button
-              onClick={onOpenModelSelector}
-              className="px-3 py-1.5 rounded-lg bg-[hsl(240,3.7%,15.9%)] hover:bg-[hsl(240,3.7%,25.9%)] text-xs text-[hsl(168,100%,50%)] transition-colors"
-            >
-              切换
-            </button>
-          </div>
         </div>
 
         {/* Commands Card */}
         <div className="rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] p-6">
-          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">常用命令</h3>
+          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">快捷命令</h3>
           <div className="grid grid-cols-2 gap-2">
             {commands.slice(0, 8).map((cmd) => (
               <button
@@ -120,7 +93,7 @@ export function AppSettings({
 
         {/* Appearance Card */}
         <div className="rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] p-6">
-          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">Appearance</h3>
+          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">外观</h3>
           <div className="flex gap-3">
             <button
               onClick={() => onSetTheme('dark')}
@@ -132,7 +105,7 @@ export function AppSettings({
               )}
             >
               <Moon className="w-5 h-5 mx-auto mb-2 text-[hsl(168,100%,50%)]" />
-              <p className="text-xs font-medium text-center">Dark</p>
+              <p className="text-xs font-medium text-center">深色</p>
             </button>
             <button
               onClick={() => onSetTheme('light')}
@@ -144,7 +117,7 @@ export function AppSettings({
               )}
             >
               <Sun className="w-5 h-5 mx-auto mb-2 text-[hsl(168,100%,50%)]" />
-              <p className="text-xs font-medium text-center">Light</p>
+              <p className="text-xs font-medium text-center">浅色</p>
             </button>
           </div>
         </div>
@@ -153,7 +126,7 @@ export function AppSettings({
         <div className="rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-[hsl(0,0%,98%)]">Vim Mode</h3>
+              <h3 className="text-sm font-medium text-[hsl(0,0%,98%)]">Vim 模式</h3>
               <p className="text-xs text-[hsl(240,5%,64.9%)] mt-1">使用 Vim 键盘快捷键操作输入框</p>
             </div>
             <button
@@ -179,7 +152,7 @@ export function AppSettings({
         <div className="rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-[hsl(0,0%,98%)]">Fast Mode</h3>
+              <h3 className="text-sm font-medium text-[hsl(0,0%,98%)]">快速模式</h3>
               <p className="text-xs text-[hsl(240,5%,64.9%)] mt-1">跳过确认步骤，加速执行流程</p>
             </div>
             <button
@@ -201,41 +174,9 @@ export function AppSettings({
           </div>
         </div>
 
-        {/* Voice Mode Card */}
-        <div className="rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-[hsl(0,0%,98%)]">Voice Mode</h3>
-              <p className="text-xs text-[hsl(240,5%,64.9%)] mt-1">
-                {status?.voice_available === false
-                  ? status?.voice_reason || '语音模式不可用'
-                  : '启用语音输入和播报'}
-              </p>
-            </div>
-            <button
-              onClick={() => onSend('/toggle-voice')}
-              disabled={status?.voice_available === false}
-              className={cn(
-                'relative w-12 h-6 rounded-full transition-colors',
-                status?.voice_enabled
-                  ? 'bg-[hsl(168,100%,50%)]'
-                  : 'bg-[hsl(240,3.7%,25.9%)]',
-                status?.voice_available === false && 'opacity-50 cursor-not-allowed'
-              )}
-            >
-              <span
-                className={cn(
-                  'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
-                  status?.voice_enabled ? 'left-7' : 'left-1'
-                )}
-              />
-            </button>
-          </div>
-        </div>
-
         {/* Effort Level Card */}
         <div className="rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] p-6">
-          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">Effort Level</h3>
+          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">工作深度</h3>
           <div className="grid grid-cols-3 gap-2">
             {['low', 'medium', 'high'].map((level) => (
               <button
@@ -261,7 +202,7 @@ export function AppSettings({
 
         {/* Passes Card */}
         <div className="rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] p-6">
-          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">Passes</h3>
+          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">迭代次数</h3>
           <div className="flex items-center gap-4">
             <button
               onClick={() => onSend('/set-passes -1')}
@@ -285,7 +226,7 @@ export function AppSettings({
 
         {/* Permission Mode Card */}
         <div className="rounded-xl border border-[hsl(240,3.7%,15.9%)] bg-[hsl(240,10%,3.9%)] p-6">
-          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">Permission Mode</h3>
+          <h3 className="text-sm font-medium text-[hsl(0,0%,98%)] mb-4">权限模式</h3>
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: 'allow', label: '允许' },

@@ -31,7 +31,8 @@ export type BackendEventType =
   | 'plan_mode_change'
   | 'swarm_status'
   | 'error'
-  | 'shutdown';
+  | 'shutdown'
+  | 'credits_update';
 
 export interface TranscriptItem {
   role: 'system' | 'user' | 'assistant' | 'tool' | 'tool_result' | 'log';
@@ -91,6 +92,8 @@ export interface BackendEvent {
   plan_mode?: string;
   swarm_teammates?: unknown[];
   swarm_notifications?: unknown[];
+  user_id?: number;
+  credits_balance?: string;
 }
 
 export interface AppState {

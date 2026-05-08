@@ -84,6 +84,7 @@ class BackendEvent(BaseModel):
         "swarm_status",
         "error",
         "shutdown",
+        "credits_update",
     ]
     select_options: list[dict[str, Any]] | None = None
     message: str | None = None
@@ -108,6 +109,8 @@ class BackendEvent(BaseModel):
     plan_mode: str | None = None
     swarm_teammates: list[dict[str, Any]] | None = None
     swarm_notifications: list[dict[str, Any]] | None = None
+    user_id: int | None = None
+    credits_balance: str | None = None
 
     @classmethod
     def ready(

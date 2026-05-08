@@ -584,3 +584,4 @@ class WebBackendHostConfig:
     session_backend: SessionBackend | None = None
     extra_skill_dirs: tuple[str, ...] = ()
     extra_plugin_roots: tuple[str, ...] = ()
+    user_id: int | None = None  # 多用户：当前登录用户 ID
