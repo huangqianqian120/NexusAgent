@@ -1,6 +1,6 @@
 """管理员 API 路由（用户管理 + Credits 分配）."""
 
-from flask import Blueprint, g, jsonify, request
+from flask import Blueprint, jsonify, request
 from sqlmodel import select
 
 from nexus.multi_user.db import get_session
@@ -61,7 +61,6 @@ def create_user():
         return jsonify({"error": "密码长度至少 6 位"}), 400
 
     from nexus.multi_user.auth import hash_password
-    from datetime import datetime
 
     session = get_session()
     existing = session.exec(select(User).where(User.email == email)).first()
@@ -162,10 +161,6 @@ def allocate_credits():
     if not user:
         session.close()
         return jsonify({"error": "用户不存在"}), 404
-
-    # 扣减管理员权限检查（可选：防止管理员给自己分配过多）
-    admin_user = session.get(User, g.current_user["user_id"])
-    session.close()
 
     # 更新用户余额
     session = get_session()

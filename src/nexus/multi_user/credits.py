@@ -46,7 +46,7 @@ def get_model_pricing(model_id: str) -> tuple[float, float]:
     db_pricing = session.exec(
         select(ModelPricing).where(
             ModelPricing.model_id == model_id,
-            ModelPricing.is_active == True,
+            ModelPricing.is_active,
         )
     ).first()
     session.close()
@@ -233,7 +233,7 @@ def charge_uniform(
         amount=-cost_credits,
         balance_after=float(new_balance),
         transaction_type="api_usage",
-        description=description or f"AI 对话消耗",
+        description=description or "AI 对话消耗",
         model=model_id or "uniform",
         input_tokens=input_tokens,
         output_tokens=output_tokens,
